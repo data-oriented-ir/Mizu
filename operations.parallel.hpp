@@ -1,18 +1,29 @@
 #pragma once
-#include <thread>
+
+#ifndef MIZU_NO_THREADS
+	#include <thread>
+#endif
 
 #include "opcode.hpp"
 
 namespace mizu {
 	// NOTE: Not a valid operation
-	inline std::thread* new_thread(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {
+	inline uint64_t new_thread(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {
+#ifndef MIZU_NO_THREADS
 		registers_and_stack env;
 		std::copy(registers, registers + memory_size, env.memory.data());
 
-		return new std::thread([pc, env = std::move(env)]() mutable {
+		return (uint64_t)new std::thread([pc, env = std::move(env)]() mutable {
 			setup_enviornment(env);
 			return pc->op(pc, env.memory.data(), env.stack_boundary, env.stack_pointer);
 		});
+#else // MIZU_NO_THREADS
+		auto env = new registers_and_stack;
+		std::copy(registers, registers + memory_size, env->memory.data());
+		setup_enviornment(*env);
+		mizu::coroutine::start(pc, env);
+		return mizu::coroutine::contexts.size() - 1; // Return the index of the thread in the context
+#endif // MIZU_NO_THREADS
 	}
 
 	inline namespace operations { extern "C" {
@@ -23,7 +34,7 @@ namespace mizu {
 		{
 			auto threadPC = pc + *(int64_t*)&registers[pc->a];
 			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack, sp);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -35,7 +46,7 @@ namespace mizu {
 		{
 			auto threadPC = pc + *(int32_t*)&pc->a;
 			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack, sp);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -46,7 +57,7 @@ namespace mizu {
 		{
 			auto threadPC = (opcode*)registers[pc->a];
 			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack, sp);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -55,13 +66,22 @@ namespace mizu {
 		void* join_thread(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
+	#ifndef MIZU_NO_THREADS
 			std::thread* thread = (std::thread*)registers[pc->a];
 			if(thread) {
 				if(thread->joinable()) thread->join();
 				delete thread;
+				registers[pc->a] = 0;
 			}
-			registers[pc->a] = 0;
-			NEXT();
+	#else // MIZU_NO_THREADS
+			size_t context_id = (size_t&)registers[pc->a];
+			if(context_id) // Can't join the main thread!
+				if(!mizu::coroutine::get_context(context_id).done()) {
+					// If the thread in question is not done yet, back up the program counter (aka queue this same operation up to be run next)
+					--mizu::coroutine::get_current_context().program_counter;
+				} else registers[pc->a] = 0;
+	#endif // MIZU_NO_THREADS
+			MIZU_NEXT();
 		}
 #else
 		;

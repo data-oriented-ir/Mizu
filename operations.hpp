@@ -17,7 +17,7 @@ namespace mizu {
 		void* label(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -40,7 +40,7 @@ namespace mizu {
 						break;
 					}
 			opcode* dbg = (opcode*)registers[pc->out];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -49,17 +49,20 @@ namespace mizu {
 		void* halt(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			return nullptr;
+	#ifdef MIZU_NO_THREADS
+			mizu::coroutine::get_current_context().program_counter = nullptr; // Mark the coroutine context as done!
+	#endif
+			return nullptr;	
 		}
-#else
+#else // MIZU_IMPLEMENTATION
 		;
 #endif
 
 		void* debug_print(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			printf("u64 = %lu, i64 = %ld, f64 = %f\n", registers[pc->a], *(int64_t*)&registers[pc->a], *(double*)&registers[pc->a]);
-			NEXT();
+			printf("u64 = %lu, i64 = %ld, f64 = %f, f32 = %f\n", registers[pc->a], (int64_t&)registers[pc->a], (double&)registers[pc->a], (float&)registers[pc->a]);
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -91,7 +94,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint32_t*)&pc->a;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -101,7 +104,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] |= uint64_t(*(uint32_t*)&pc->a) << 32;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -111,7 +114,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(uint64_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -121,7 +124,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(int64_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -131,7 +134,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(uint32_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -141,7 +144,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(int32_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -151,7 +154,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(uint16_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -161,7 +164,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(int16_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -171,7 +174,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(uint8_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -181,7 +184,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			*(int8_t*)&registers[pc->out] = registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -191,7 +194,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -201,7 +204,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int64_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -211,7 +214,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]) = *(uint64_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -221,7 +224,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]) = *(uint64_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -231,7 +234,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -241,7 +244,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int32_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -251,7 +254,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]) = *(uint32_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -261,7 +264,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]) = *(uint32_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -271,7 +274,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -281,7 +284,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int16_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -291,7 +294,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]) = *(uint16_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -301,7 +304,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]) = *(uint16_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -311,7 +314,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -321,7 +324,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int8_t*)(sp + registers[pc->a]);
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -331,7 +334,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]) = *(uint8_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -341,7 +344,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]) = *(uint8_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -351,7 +354,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			sp -= registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -362,7 +365,7 @@ namespace mizu {
 		{
 			auto& size = *(uint32_t*)&pc->a;
 			sp -= size;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -372,7 +375,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			sp += registers[pc->a];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -383,7 +386,7 @@ namespace mizu {
 		{
 			auto& size = *(uint32_t*)&pc->a;
 			sp += size;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -396,7 +399,7 @@ namespace mizu {
 			auto a = registers[pc->a];
 			registers[pc->out] = (uint64_t)pc;
 			pc += *(int64_t*)&a - 1;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -408,7 +411,7 @@ namespace mizu {
 		{
 			registers[pc->out] = (uint64_t)pc;
 			pc += *(int32_t*)&pc->a - 1;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -419,7 +422,7 @@ namespace mizu {
 		{
 			registers[pc->out] = (uint64_t)pc;
 			pc = (opcode*)registers[pc->a] - 1;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -432,7 +435,7 @@ namespace mizu {
 			registers[pc->out] = (uint64_t)pc;
 			if(registers[pc->a])
 				pc += *(int64_t*)&registers[pc->b] - 1;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -445,7 +448,7 @@ namespace mizu {
 			registers[pc->out] = (uint64_t)pc;
 			if(registers[pc->a])
 				pc += *(int16_t*)&pc->b - 1;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -457,7 +460,7 @@ namespace mizu {
 			registers[pc->out] = (uint64_t)pc;
 			if(registers[pc->a])
 				pc = (opcode*)registers[pc->b] - 1;
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -467,7 +470,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] == registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -477,7 +480,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] != registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -487,7 +490,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] < registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -497,7 +500,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int64_t*)&registers[pc->a] < *(int64_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -507,7 +510,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] >= registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -517,7 +520,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int64_t*)&registers[pc->a] >= *(int64_t*)&registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -527,7 +530,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] + registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -537,7 +540,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] - registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -547,7 +550,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] * registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -557,7 +560,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] / registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -567,7 +570,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] % registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -577,7 +580,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] << registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -587,7 +590,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] >> registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -597,7 +600,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = *(int64_t*)&registers[pc->a] >> registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -607,7 +610,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] ^ registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -617,7 +620,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] & registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;
@@ -627,7 +630,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			registers[pc->out] = registers[pc->a] | registers[pc->b];
-			NEXT();
+			MIZU_NEXT();
 		}
 #else
 		;

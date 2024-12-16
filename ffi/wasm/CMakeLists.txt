@@ -1,0 +1,7 @@
+configure_file(generator.cpp.in generator.cpp)
+add_executable(trampoline_generator generator.cpp)
+if (MSVC)
+    target_compile_options(trampoline_generator PUBLIC /EHs-c-)
+else()
+    target_compile_options(trampoline_generator PUBLIC -fno-exceptions)
+endif()
