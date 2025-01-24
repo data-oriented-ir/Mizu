@@ -59,6 +59,9 @@ if(${MIZU_NO_EXCEPTIONS})
 	add_if_flag_compiles("-fno-exceptions" CMAKE_CXX_FLAGS)
 endif()
 
+add_subdirectory(thirdparty/libfp)
+target_link_libraries(mizu_vm INTERFACE libfp)
+
 add_library(mizu::vm ALIAS mizu_vm)
 
 

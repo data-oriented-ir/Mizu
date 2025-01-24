@@ -1,10 +1,11 @@
 #pragma once
 
-#ifndef MIZU_NO_THREADS
+#include "opcode.hpp"
+#include <algorithm>
+
+#ifndef MIZU_NO_HARDWARE_THREADS
 	#include <thread>
 #endif
-
-#include "opcode.hpp"
 
 namespace mizu {
 	// NOTE: Not a valid operation
@@ -22,7 +23,7 @@ namespace mizu {
 		std::copy(registers, registers + memory_size, env->memory.data());
 		setup_enviornment(*env);
 		mizu::coroutine::start(pc, env);
-		return mizu::coroutine::contexts.size() - 1; // Return the index of the thread in the context
+		return fpda_size(mizu::coroutine::contexts) - 1; // Return the index of the thread in the context
 #endif // MIZU_NO_HARDWARE_THREADS
 	}
 

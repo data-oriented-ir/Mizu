@@ -12,16 +12,15 @@
 		#else
 			#include "wasm/gen/calls.hpp"
 		#endif
-		#include <vector>
 	#endif
 
 
 	namespace mizu::ffi {
 	#ifdef MIZU_IMPLEMENTATION
 		#ifndef MIZU_NO_LIB_FFI
-			static thread_local std::vector<ffi_type*> current_types = {};
+			static thread_local fp::raii::dynarray<ffi_type*> current_types = {};
 		#else
-			static thread_local std::vector<wasm::types> current_types = {};
+			static thread_local fp::raii::dynarray<wasm::types> current_types = {};
 		#endif
 	#endif
 
@@ -34,29 +33,27 @@
 			auto func = FFI_FN(registers[pc->a]);
 			auto interface_ = (ffi_cif*)registers[pc->b];
 
-			std::vector<void*> args; args.reserve(interface_->nargs);
+			fp::dynarray<void*> args; args.reserve(interface_->nargs);
 			for(size_t i = 0; i < interface_->nargs; ++i)
-				args.emplace_back(&registers[registers::a(0) + i]);
+				args.push_back(&registers[registers::a(i)]);
 
 			if constexpr(has_return)
 				ffi_call(interface_, func, &registers[pc->out], args.data());
 			else ffi_call(interface_, func, nullptr, args.data());
 	#else
 			auto func = (void*)registers[pc->a];
-			auto interface_ = (std::vector<wasm::types>*)registers[pc->b];
+			auto interface_ = (fp::dynarray<wasm::types>*)registers[pc->b];
 
 			wasm::variant res;
 			switch(interface_->size()) {
 				break; case 0: MIZU_THROW(std::runtime_error("Function interfaces must at least specify the return type!"));
-				break; case 1: res = wasm::call(interface_->at(0), func);
-				break; case 2: res = wasm::call(interface_->at(0), func, interface_->at(1), registers[registers::a(0)]);
-				break; case 3: res = wasm::call(interface_->at(0), func, interface_->at(1), registers[registers::a(0)], interface_->at(2), registers[registers::a(1)]);
-				break; case 4: res = wasm::call(interface_->at(0), func, interface_->at(1), registers[registers::a(0)], interface_->at(2), registers[registers::a(1)],
-					interface_->at(3), registers[registers::a(2)]);
-				break; case 5: res = wasm::call(interface_->at(0), func, interface_->at(1), registers[registers::a(0)], interface_->at(2), registers[registers::a(1)],
-					interface_->at(3), registers[registers::a(2)], interface_->at(4), registers[registers::a(3)]);
-				// break; case 6: res = wasm::call(interface_->at(0), func, interface_->at(1), registers[registers::a(0)], interface_->at(2), registers[registers::a(1)],
-				// 	interface_->at(3), registers[registers::a(2)], interface_->at(4), registers[registers::a(3)], interface_->at(5), registers[registers::a(4)]);
+				break; case 1: res = wasm::call((*interface)[0], func);
+				break; case 2: res = wasm::call((*interface)[0], func, (*interface)[1], registers[registers::a(0)]);
+				break; case 3: res = wasm::call((*interface)[0], func, (*interface)[1], registers[registers::a(0)], (*interface)[2], registers[registers::a(1)]);
+				break; case 4: res = wasm::call((*interface)[0], func, (*interface)[1], registers[registers::a(0)], (*interface)[2], registers[registers::a(1)],
+					(*interface)[3], registers[registers::a(2)]);
+				break; case 5: res = wasm::call((*interface)[0], func, (*interface)[1], registers[registers::a(0)], (*interface)[2], registers[registers::a(1)],
+					(*interface)[3], registers[registers::a(2)], (*interface)[4], registers[registers::a(3)]);
 				break; default: MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
 			}
 
@@ -200,8 +197,7 @@
 	#else
 				if(current_types.empty()) MIZU_THROW(std::runtime_error("Function interfaces must at least specify the return type!"));
 				if(current_types.size() > 5) MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
-				auto interface_ = (std::vector<wasm::types>*)(registers[pc->out] = (size_t)new std::vector<wasm::types>{});
-				*interface_ = std::move(current_types);
+				registers[pc->out] = (size_t)current_types.clone();
 	#endif
 
 				current_types.clear();

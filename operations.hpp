@@ -1,17 +1,24 @@
-#include <cstdint>
-#include <cstdio>
-#include <string_view>
+#pragma once
 
+// #include <cstdint>
+// #include <cstdio>
+// #include <string_view>
 #include "opcode.hpp"
+
+#include <fp/string.h>
 
 namespace mizu {
 
-	constexpr uint32_t label2int(std::string_view label) {
+	constexpr uint32_t label2int(const fp_string_view label) {
+		size_t length = fp_string_view_length(label);
+		if(length > sizeof(uint32_t)) return *fp_view_data(uint32_t, label);
+
 		uint32_t out = 0;
-		for(size_t i = 0; i < label.size() && i < 4; ++i)
-			out |= label[i] << (i * 8);
+		for(size_t i = 0; i < fp_string_view_length(label); ++i)
+			out |= fp_view_data(char, label)[i] << (i * 8);
 		return out;
 	}
+	constexpr uint32_t label2int(const fp_string label) { return label2int(fp_string_to_view_const(label)); }
 
 	inline namespace operations { extern "C" {
 		void* label(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
@@ -52,7 +59,7 @@ namespace mizu {
 	#ifdef MIZU_NO_HARDWARE_THREADS
 			mizu::coroutine::get_current_context().program_counter = nullptr; // Mark the coroutine context as done!
 	#endif
-			return nullptr;	
+			return nullptr;
 		}
 #else // MIZU_IMPLEMENTATION
 		;

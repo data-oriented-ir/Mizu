@@ -1,9 +1,9 @@
-#include <cmath>
-#include <concepts>
-#include <cstdint>
-#include <cstdio>
+#pragma once
 
 #include "opcode.hpp"
+
+#include <cmath>
+#include <concepts>
 
 namespace mizu {
 	using float32_t = float;
@@ -116,66 +116,23 @@ namespace mizu {
 		}\
 \
 \
-		inline std::pair<int, bool> classify_f ## bits(MIZU_FLOAT_TYPE(bits) f) {\
-			return {/*classify*/std::fpclassify(f), /*negative*/std::signbit(f)};\
-		}\
-		void* set_if_negative_infinity_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_INFINITE && negative;\
+		void* set_if_negative_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
+			registers[pc->out] = std::signbit(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 \
-		void* set_if_positive_infinity_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_INFINITE && !negative;\
+		void* set_if_positive_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
+			registers[pc->out] = !std::signbit(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 \
-		void* set_if_negative_normal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_NORMAL && negative;\
+		void* set_if_infinity_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
+			registers[pc->out] = std::isinf(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 \
-		void* set_if_positive_normal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_NORMAL && !negative;\
-			MIZU_NEXT();\
-		}\
-\
-		void* set_if_negative_subnormal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_SUBNORMAL && negative;\
-			MIZU_NEXT();\
-		}\
-\
-		void* set_if_positive_subnormal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_SUBNORMAL && !negative;\
-			MIZU_NEXT();\
-		}\
-\
-		void* set_if_negative_zero_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_ZERO && negative;\
-			MIZU_NEXT();\
-		}\
-\
-		void* set_if_positive_zero_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_ZERO && !negative;\
-			MIZU_NEXT();\
-		}\
-\
-		void* set_if_negative_nan_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_NAN && negative;\
-			MIZU_NEXT();\
-		}\
-\
-		void* set_if_positive_nan_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
-			auto [classify, negative] = classify_f ## bits(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
-			registers[pc->out] = classify == FP_NAN && !negative;\
+		void* set_if_nan_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {\
+			registers[pc->out] = std::isnan(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}
 #else
