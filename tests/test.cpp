@@ -1,9 +1,9 @@
 #define MIZU_IMPLEMENTATION
-#include "operations.hpp"
-#include "operations.parallel.hpp"
-#include "operations.float.hpp"
+#include <operations.hpp>
+#include <operations.parallel.hpp>
+#include <operations.float.hpp>
 
-// #include "ffi/operations.hpp"
+#include <ffi/operations.hpp>
 
 MIZU_EXPORT_C void test_print(char* c) {
 	printf("%s\n", c);

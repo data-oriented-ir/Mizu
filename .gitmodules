@@ -4,3 +4,6 @@
 [submodule "ffi/wasm/magic_enum"]
 	path = ffi/wasm/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
+[submodule "thirdparty/libfp"]
+	path = thirdparty/libfp
+	url = https://github.com/joshuadahlunr/libfp

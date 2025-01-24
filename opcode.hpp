@@ -1,8 +1,9 @@
 #pragma once
-#include <cassert>
-#include <cstdint>
-#include <array>
-#include <vector>
+#ifdef MIZU_IMPLEMENTATION
+#define FP_IMPLEMENTATION
+#endif
+#include <fp/pointer.hpp>
+#include <fp/dynarray.hpp>
 
 
 #ifdef _WIN32
@@ -50,7 +51,7 @@ namespace mizu {
 
 	constexpr static reg_t memory_size = 1024;
 	struct registers_and_stack {
-		std::array<uint64_t, memory_size> memory;
+		fp::array<uint64_t, memory_size> memory;
 		uint8_t* stack_boundary;
 		uint8_t* stack_pointer;
 	};
@@ -76,16 +77,16 @@ namespace mizu {
 			}
 		};
 
-		static std::vector<execution_context> contexts;
+		static fp_dynarray(execution_context) contexts;
 		static size_t current_context /* = 0 */;
 
 		inline static size_t next_context() {
-			return current_context = (current_context + 1) % contexts.size();
+			return current_context = (current_context + 1) % fpda_size(contexts);
 		}
 
 		inline static execution_context& get_context(size_t index) {
 			assert(index >= 0);
-			assert(index < contexts.size());
+			assert(index < fpda_size(contexts));
 			return contexts[index];
 		}
 
@@ -97,7 +98,7 @@ namespace mizu {
 			assert(sp);
 			get_current_context().stack_pointer = sp;
 
-			if(contexts.size() == 1) {
+			if(fpda_size(contexts) == 1) {
 				get_current_context().program_counter = ++pc;
 				return pc->op(pc, registers, stack, sp);
 			}
@@ -110,12 +111,13 @@ namespace mizu {
 
 		static void start(opcode* program_counter, registers_and_stack* enviornment) {
 			assert(program_counter && enviornment);
-			contexts.emplace_back(program_counter - 1, enviornment->stack_pointer, enviornment); // TODO: Is the -1 on the program counter nessicary?
+			execution_context ctx{program_counter - 1, enviornment->stack_pointer, enviornment};
+			fpda_push_back(contexts, ctx);
 		}
 
 		static bool done() { // TODO: There has to be a better way to write this!
-			for(auto& context: contexts)
-				if(!context.done()) // We are done if all program counters are nullptr
+			fp_iterate_named(contexts, context)
+				if(!context->done()) // We are done if all program counters are nullptr
 					return false;
 			return true;
 		}
@@ -134,7 +136,7 @@ namespace mizu {
 	}(const_cast<mizu::opcode*>(program), &env)
 
 #ifdef MIZU_IMPLEMENTATION
-	std::vector<coroutine::execution_context> coroutine::contexts;
+	fp_dynarray(coroutine::execution_context) coroutine::contexts = nullptr;
 	size_t coroutine::current_context = 0;
 #endif
 #endif // MIZU_NO_HARDWARE_THREADS
