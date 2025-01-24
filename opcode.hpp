@@ -15,6 +15,12 @@
 #endif
 #define MIZU_EXPORT_C extern "C" MIZU_EXPORT
 
+#ifdef _WIN32
+	#define MIZU_MAIN(...) MIZU_EXPORT_C int dll_main(const int argc, const char** argv __VA_ARGS__)
+#else
+	#define MIZU_MAIN(...) int main(const int argc, const char** argv __VA_ARGS__)
+#endif
+
 namespace mizu {
 	using reg_t = uint16_t;
 	inline namespace registers {
@@ -54,11 +60,11 @@ namespace mizu {
 		env.stack_pointer = (uint8_t*)(env.memory.data() + env.memory.size());
 	}
 
-#ifndef MIZU_NO_THREADS
+#ifndef MIZU_NO_HARDWARE_THREADS
 	#define MIZU_NEXT() return (registers[0] = 0, (++pc)->op(pc, registers, stack, sp))
 
-	#define MIZU_START_FROM_ENVIORNMENT(program, env) program->op(program, env.memory.data(), env.stack_boundary, env.stack_pointer)
-#else // MIZU_NO_THREADS
+	#define MIZU_START_FROM_ENVIORNMENT(program, env) const_cast<opcode*>(program)->op(const_cast<opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
+#else // MIZU_NO_HARDWARE_THREADS
 	struct coroutine {
 		struct execution_context {
 			opcode* program_counter; // Set to null to indicate that a section is done
@@ -125,11 +131,11 @@ namespace mizu {
 			mizu::coroutine::get_current_context().enviornment->stack_boundary, mizu::coroutine::get_current_context().stack_pointer)\
 		) && !mizu::coroutine::done());\
 		return result;\
-	}(program, &env)
+	}(const_cast<mizu::opcode*>(program), &env)
 
 #ifdef MIZU_IMPLEMENTATION
 	std::vector<coroutine::execution_context> coroutine::contexts;
 	size_t coroutine::current_context = 0;
 #endif
-#endif // MIZU_NO_THREADS
+#endif // MIZU_NO_HARDWARE_THREADS
 }

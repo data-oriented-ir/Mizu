@@ -1,6 +1,6 @@
 #include <windows.h>
 
-extern int dll_main(int argc, char** argv);
+extern "C" int dll_main(int argc, char** argv);
 
 int main(int argc, char** argv) {
     // Set the input and output code page to UTF-8 (65001)

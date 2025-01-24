@@ -49,7 +49,7 @@ namespace mizu {
 		void* halt(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-	#ifdef MIZU_NO_THREADS
+	#ifdef MIZU_NO_HARDWARE_THREADS
 			mizu::coroutine::get_current_context().program_counter = nullptr; // Mark the coroutine context as done!
 	#endif
 			return nullptr;	
@@ -120,15 +120,15 @@ namespace mizu {
 		;
 #endif
 
-		void* convert_to_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			*(int64_t*)&registers[pc->out] = registers[pc->a];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* convert_to_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			*(int64_t*)&registers[pc->out] = registers[pc->a];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* convert_to_u32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -140,15 +140,15 @@ namespace mizu {
 		;
 #endif
 
-		void* convert_to_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			*(int32_t*)&registers[pc->out] = registers[pc->a];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* convert_to_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			*(int32_t*)&registers[pc->out] = registers[pc->a];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* convert_to_u16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -160,15 +160,15 @@ namespace mizu {
 		;
 #endif
 
-		void* convert_to_i16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			*(int16_t*)&registers[pc->out] = registers[pc->a];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* convert_to_i16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			*(int16_t*)&registers[pc->out] = registers[pc->a];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* convert_to_u8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -180,15 +180,15 @@ namespace mizu {
 		;
 #endif
 
-		void* convert_to_i8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			*(int8_t*)&registers[pc->out] = registers[pc->a];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* convert_to_i8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			*(int8_t*)&registers[pc->out] = registers[pc->a];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_load_u64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -200,15 +200,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_load_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(int64_t*)(sp + registers[pc->a]);
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_load_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(int64_t*)(sp + registers[pc->a]);
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_store_u64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -220,15 +220,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_store_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]) = *(uint64_t*)&registers[pc->b];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_store_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]) = *(uint64_t*)&registers[pc->b];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_load_u32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -240,15 +240,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_load_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(int32_t*)(sp + registers[pc->a]);
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_load_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(int32_t*)(sp + registers[pc->a]);
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_store_u32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -260,15 +260,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_store_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]) = *(uint32_t*)&registers[pc->b];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_store_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]) = *(uint32_t*)&registers[pc->b];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_load_u16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -280,15 +280,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_load_i16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(int16_t*)(sp + registers[pc->a]);
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_load_i16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(int16_t*)(sp + registers[pc->a]);
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_store_u16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -300,15 +300,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_store_i16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]) = *(uint16_t*)&registers[pc->b];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_store_i16(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]) = *(uint16_t*)&registers[pc->b];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_load_u8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -320,15 +320,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_load_i8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(int8_t*)(sp + registers[pc->a]);
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_load_i8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(int8_t*)(sp + registers[pc->a]);
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_store_u8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -340,15 +340,15 @@ namespace mizu {
 		;
 #endif
 
-		void* stack_store_i8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
-#ifdef MIZU_IMPLEMENTATION
-		{
-			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]) = *(uint8_t*)&registers[pc->b];
-			MIZU_NEXT();
-		}
-#else
-		;
-#endif
+// 		void* stack_store_i8(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+// #ifdef MIZU_IMPLEMENTATION
+// 		{
+// 			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]) = *(uint8_t*)&registers[pc->b];
+// 			MIZU_NEXT();
+// 		}
+// #else
+// 		;
+// #endif
 
 		void* stack_push(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION

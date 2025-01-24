@@ -3,18 +3,13 @@
 #include "operations.parallel.hpp"
 #include "operations.float.hpp"
 
-#include "ffi/operations.hpp"
+// #include "ffi/operations.hpp"
 
 MIZU_EXPORT_C void test_print(char* c) {
 	printf("%s\n", c);
 }
 
-#ifdef _WIN32
-MIZU_EXPORT int dll_main(int argc, char** argv)
-#else
-int main(int argc, char** argv)
-#endif
-{
+MIZU_MAIN() {
 	using namespace mizu;
 
 #ifdef _WIN32
@@ -24,7 +19,7 @@ int main(int argc, char** argv)
 #endif
 	auto function = "print";
 	auto hw = "Hello 世界";
-	static opcode program[] = {
+	const static opcode program[] = {
 		opcode{find_label, 200}.set_immediate(label2int("thread")),
 		// opcode{ffi::push_type_void},
 		// opcode{ffi::push_type_pointer},
