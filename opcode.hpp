@@ -27,9 +27,10 @@ namespace mizu {
 	inline namespace registers {
 		constexpr reg_t x(std::size_t i) { return i; }
 		constexpr reg_t t(std::size_t i) { return i + 1; assert(i <= 10); }
-		constexpr reg_t a(std::size_t i) { return i + 11; }
+		constexpr reg_t a(std::size_t i) { return i + 12; }
 
 		constexpr static reg_t zero = x(0);
+		constexpr static reg_t return_address = x(11), ra = return_address;
 	}
 	using operation_t = void*(*)(struct opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp);
 
@@ -49,7 +50,7 @@ namespace mizu {
 		opcode& set_host_pointer_upper_immediate(const void* ptr) { set_immediate(((std::size_t)ptr) >> 32); return *this; }
 	};
 
-	constexpr static reg_t memory_size = 1024;
+	constexpr static reg_t memory_size = 1024 * 5;
 	struct registers_and_stack {
 		fp::array<uint64_t, memory_size> memory;
 		uint8_t* stack_boundary;
