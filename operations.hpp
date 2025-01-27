@@ -69,6 +69,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			printf("u64 = %lu, i64 = %ld, f64 = %f, f32 = %f\n", registers[pc->a], (int64_t&)registers[pc->a], (double&)registers[pc->a], (float&)registers[pc->a]);
+			fflush(stdout); // Make sure buffer is flushed!
 			MIZU_NEXT();
 		}
 #else
@@ -404,7 +405,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto a = registers[pc->a];
-			registers[pc->out] = (uint64_t)pc;
+			registers[pc->out] = (uint64_t)(pc + 1);
 			pc += *(int64_t*)&a - 1;
 			MIZU_NEXT();
 		}
@@ -416,7 +417,7 @@ namespace mizu {
 		void* jump_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = (uint64_t)pc;
+			registers[pc->out] = (uint64_t)(pc + 1);
 			pc += *(int32_t*)&pc->a - 1;
 			MIZU_NEXT();
 		}
@@ -427,7 +428,7 @@ namespace mizu {
 		void* jump_to(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = (uint64_t)pc;
+			registers[pc->out] = (uint64_t)(pc + 1);
 			pc = (opcode*)registers[pc->a] - 1;
 			MIZU_NEXT();
 		}
@@ -439,7 +440,7 @@ namespace mizu {
 		void* branch_relative(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = (uint64_t)pc;
+			registers[pc->out] = (uint64_t)(pc + 1);
 			if(registers[pc->a])
 				pc += *(int64_t*)&registers[pc->b] - 1;
 			MIZU_NEXT();
@@ -452,7 +453,7 @@ namespace mizu {
 		void* branch_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = (uint64_t)pc;
+			registers[pc->out] = (uint64_t)(pc + 1);
 			if(registers[pc->a])
 				pc += *(int16_t*)&pc->b - 1;
 			MIZU_NEXT();
@@ -464,7 +465,7 @@ namespace mizu {
 		void* branch_to(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = (uint64_t)pc;
+			registers[pc->out] = (uint64_t)(pc + 1);
 			if(registers[pc->a])
 				pc = (opcode*)registers[pc->b] - 1;
 			MIZU_NEXT();
