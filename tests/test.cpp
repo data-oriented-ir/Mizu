@@ -2,6 +2,7 @@
 #include <operations.hpp>
 #include <operations.parallel.hpp>
 #include <operations.float.hpp>
+#include <operations.unsafe.hpp>
 
 #include <ffi/operations.hpp>
 

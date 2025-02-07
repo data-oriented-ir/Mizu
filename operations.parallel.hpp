@@ -2,6 +2,7 @@
 
 #include "opcode.hpp"
 #include <algorithm>
+#include <chrono>
 
 #ifndef MIZU_NO_HARDWARE_THREADS
 	#include <thread>
@@ -26,6 +27,23 @@ namespace mizu {
 		return fpda_size(mizu::coroutine::contexts) - 1; // Return the index of the thread in the context
 #endif // MIZU_NO_HARDWARE_THREADS
 	}
+
+#ifndef MIZU_CUSTOM_DELAY_IMPLEMENTATION
+	inline void delay(std::chrono::microseconds time, uint64_t& storage_register) {
+	#ifndef MIZU_NO_HARDWARE_THREADS
+		std::this_thread::sleep_for(time);
+	#else
+		if(!storage_register) storage_register = (size_t)new std::chrono::high_resolution_clock::time_point(std::chrono::high_resolution_clock::now());
+
+		auto start = (std::chrono::high_resolution_clock::time_point*)storage_register;
+		if(std::chrono::high_resolution_clock::now() - *start > time)
+			--mizu::coroutine::get_current_context().program_counter;
+		else delete start;
+	#endif
+	}
+#else 
+	extern void delay(std::chrono::microseconds time);
+#endif
 
 	inline namespace operations { extern "C" {
 
@@ -82,6 +100,41 @@ namespace mizu {
 					--mizu::coroutine::get_current_context().program_counter;
 				} else registers[pc->a] = 0;
 	#endif // MIZU_NO_HARDWARE_THREADS
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+
+		void* delay_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			auto time = std::chrono::microseconds(registers[pc->a]);
+			delay(time, registers[pc->out]);
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+
+		void* delay_seconds_f64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			auto seconds = (double&)registers[pc->a];
+			size_t micro = seconds * 1'000'000;
+			delay(std::chrono::microseconds{micro});
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+
+		void* delay_seconds_f32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			auto seconds = (float&)registers[pc->a];
+			size_t micro = seconds * 1'000'000;
+			delay(std::chrono::microseconds{micro});
 			MIZU_NEXT();
 		}
 #else
