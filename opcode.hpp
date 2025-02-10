@@ -16,6 +16,12 @@
 #endif
 #define MIZU_EXPORT_C extern "C" MIZU_EXPORT
 
+#if defined(__clang__) || defined(MIZU_FORCE_ENABLE_TAIL_CALL)
+	#define MIZU_TAIL_CALL __attribute__((musttail)) 
+#else
+	#define MIZU_TAIL_CALL 
+#endif
+
 #ifdef _WIN32
 	#define MIZU_MAIN(...) MIZU_EXPORT_C int dll_main(const int argc, const char** argv __VA_ARGS__)
 #else
@@ -63,7 +69,7 @@ namespace mizu {
 	}
 
 #ifndef MIZU_NO_HARDWARE_THREADS
-	#define MIZU_NEXT() return (registers[0] = 0, (++pc)->op(pc, registers, stack, sp))
+	#define MIZU_NEXT()  registers[0] = 0; MIZU_TAIL_CALL return (++pc)->op(pc, registers, stack, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) const_cast<opcode*>(program)->op(const_cast<opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
 #else // MIZU_NO_HARDWARE_THREADS
@@ -101,13 +107,13 @@ namespace mizu {
 
 			if(fpda_size(contexts) == 1) {
 				get_current_context().program_counter = ++pc;
-				return pc->op(pc, registers, stack, sp);
+				MIZU_TAIL_CALL return pc->op(pc, registers, stack, sp);
 			}
 
 			auto& context = get_context(next_context());
 			if(!context.program_counter) return next(pc, registers, stack, context.stack_pointer); // If this context is done... recursively run the next one
 			pc = ++context.program_counter;
-			return pc->op(pc, context.enviornment->memory.data(), context.enviornment->stack_boundary, context.stack_pointer);
+			MIZU_TAIL_CALL return pc->op(pc, context.enviornment->memory.data(), context.enviornment->stack_boundary, context.stack_pointer);
 		}
 
 		static void start(opcode* program_counter, registers_and_stack* enviornment) {
@@ -124,7 +130,7 @@ namespace mizu {
 		}
 	};
 
-	#define MIZU_NEXT() return (registers[0] = 0, mizu::coroutine::next(pc, registers, stack, sp));
+	#define MIZU_NEXT() registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, stack, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) [](mizu::opcode* program_counter, mizu::registers_and_stack* enviornment) -> void* {\
 		mizu::coroutine::start(program_counter, enviornment);\
