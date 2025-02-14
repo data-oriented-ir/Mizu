@@ -42,6 +42,7 @@ MIZU_MAIN() {
 		opcode{set_if_equal, 4, 4, 0},
 		opcode{branch_relative_immediate, 0, 4}.set_branch_immediate(5),
 		// opcode{fork_relative_immediate, 5}.set_immediate_signed(5),
+		opcode{channel_create, 220, 0},
 		opcode{fork_to, 5, 200},
 		opcode{stack_load_u32, 3, 0, 0},
 		opcode{debug_print, 0, 3},
@@ -51,6 +52,9 @@ MIZU_MAIN() {
 		opcode{convert_to_f64, 7, 3},
 		opcode{add_f64, 8, 6, 7},
 		opcode{debug_print, 0, 8},
+		opcode{channel_recieve, 1, 220},
+		opcode{channel_close, 0, 220},
+		opcode{debug_print, 0, 1},
 		opcode{join_thread, 0, 5, 0},
 		opcode{halt},
 
@@ -66,6 +70,7 @@ MIZU_MAIN() {
 		// Mizu call (a0 = fib(40))
 		opcode{load_immediate, registers::a(0)}.set_immediate(40),
 		opcode{jump_to, registers::return_address, 200},
+		opcode{channel_send, 0, 220, registers::a(0)},
 		opcode{debug_print, 0, registers::a(0)},
 		opcode{halt},
 
