@@ -40,7 +40,7 @@ namespace mizu {
 
 		auto start = (std::chrono::high_resolution_clock::time_point*)storage_register;
 		if(std::chrono::high_resolution_clock::now() - *start > time)
-			--mizu::coroutine::get_current_context().program_counter;
+			--pc;
 		else delete start;
 	#endif
 	}
@@ -100,7 +100,7 @@ namespace mizu {
 			if(context_id) { // Can't join the main thread!
 				if(!mizu::coroutine::get_context(context_id).done())
 					// If the thread in question is not done yet, back up the program counter (aka queue this same operation up to be run next)
-					--mizu::coroutine::get_current_context().program_counter;
+					--pc;
 				else registers[pc->a] = 0;
 			}
 	#endif // MIZU_NO_HARDWARE_THREADS
@@ -168,7 +168,7 @@ namespace mizu {
 			// if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
 			if(channel.empty()) {
 				// If there is nothing to recieve, nudge back the program counter
-				--mizu::coroutine::get_current_context().program_counter;
+				--pc;
 			} else registers[pc->out] = channel.pop_front();
 	#endif // MIZU_NO_HARDWARE_THREADS
 			MIZU_NEXT();
@@ -189,7 +189,7 @@ namespace mizu {
 			// if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
 			if(channel.size() == channel.capacity()) {
 				// If the channel is full, nudge back the program counter
-				--mizu::coroutine::get_current_context().program_counter;
+				--pc;
 			} else channel.push_back(registers[pc->b]);
 	#endif // MIZU_NO_HARDWARE_THREADS
 			MIZU_NEXT();
