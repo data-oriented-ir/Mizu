@@ -103,14 +103,14 @@ namespace mizu {
 			return get_context(current_context);
 		}
 
-		static void* next(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) { // NOTE: Next has the same signature as operations for tail recursion purposes!
+		inline static void* next(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) { // NOTE: Next has the same signature as operations for tail recursion purposes!
 			assert(sp);
 			get_current_context().stack_pointer = sp;
 
 			if(fpda_size(contexts) == 1) {
 				get_current_context().program_counter = ++pc;
 				MIZU_TAIL_CALL return pc->op(pc, registers, stack, sp);
-			}
+			} else get_current_context().program_counter = pc; // Make sure pc updates (jumps) are recorded
 
 			auto& context = get_context(next_context());
 			if(!context.program_counter) return next(pc, registers, stack, context.stack_pointer); // If this context is done... recursively run the next one
