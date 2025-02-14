@@ -5,7 +5,10 @@
 #include <chrono>
 
 #ifndef MIZU_NO_HARDWARE_THREADS
+	#include "exception.hpp"
+
 	#include <thread>
+	#include <msd/channel.hpp> // TODO: Need to implement non
 #endif
 
 namespace mizu {
@@ -41,7 +44,7 @@ namespace mizu {
 		else delete start;
 	#endif
 	}
-#else 
+#else
 	extern void delay(std::chrono::microseconds time);
 #endif
 
@@ -94,11 +97,12 @@ namespace mizu {
 			}
 	#else // MIZU_NO_HARDWARE_THREADS
 			size_t context_id = (size_t&)registers[pc->a];
-			if(context_id) // Can't join the main thread!
-				if(!mizu::coroutine::get_context(context_id).done()) {
+			if(context_id) { // Can't join the main thread!
+				if(!mizu::coroutine::get_context(context_id).done())
 					// If the thread in question is not done yet, back up the program counter (aka queue this same operation up to be run next)
 					--mizu::coroutine::get_current_context().program_counter;
-				} else registers[pc->a] = 0;
+				else registers[pc->a] = 0;
+			}
 	#endif // MIZU_NO_HARDWARE_THREADS
 			MIZU_NEXT();
 		}
@@ -106,7 +110,7 @@ namespace mizu {
 		;
 #endif
 
-		void* delay_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* sleep_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto time = std::chrono::microseconds(registers[pc->a]);
@@ -117,24 +121,77 @@ namespace mizu {
 		;
 #endif
 
-		void* delay_seconds_f64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* channel_create(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			auto seconds = (double&)registers[pc->a];
-			size_t micro = seconds * 1'000'000;
-			delay(std::chrono::microseconds{micro});
+			auto capacity = registers[pc->a];
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			registers[pc->out] = (uint64_t)new msd::channel<uint64_t>(capacity);
+	#else // MIZU_NO_HARDWARE_THREADS
+			auto channel = fp::dynarray<uint64_t>(nullptr);
+			registers[pc->out] = (uint64_t)channel.reserve(std::max<size_t>(1, capacity)).raw;
+	#endif // MIZU_NO_HARDWARE_THREADS
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
 
-		void* delay_seconds_f32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* channel_close(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			auto seconds = (float&)registers[pc->a];
-			size_t micro = seconds * 1'000'000;
-			delay(std::chrono::microseconds{micro});
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto channel = (msd::channel<uint64_t>*)registers[pc->a];
+			if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
+			delete channel;
+	#else // MIZU_NO_HARDWARE_THREADS
+			auto channel = fp::dynarray<uint64_t>((uint64_t*)registers[pc->a]);
+			// if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
+			channel.free();
+	#endif // MIZU_NO_HARDWARE_THREADS
+			registers[pc->a] = 0;
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+
+		void* channel_recieve(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto channel = (msd::channel<uint64_t>*)registers[pc->a];
+			if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
+			*channel >> registers[pc->out];
+	#else // MIZU_NO_HARDWARE_THREADS
+			auto channel = fp::dynarray<uint64_t>((uint64_t*)registers[pc->a]);
+			// if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
+			if(channel.empty()) {
+				// If there is nothing to recieve, nudge back the program counter
+				--mizu::coroutine::get_current_context().program_counter;
+			} else registers[pc->out] = channel.pop_front();
+	#endif // MIZU_NO_HARDWARE_THREADS
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+
+		void* channel_send(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto channel = (msd::channel<uint64_t>*)registers[pc->a];
+			if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
+			*channel << registers[pc->b];
+	#else // MIZU_NO_HARDWARE_THREADS
+			auto channel = fp::dynarray<uint64_t>((uint64_t*)registers[pc->a]);
+			// if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
+			if(channel.size() == channel.capacity()) {
+				// If the channel is full, nudge back the program counter
+				--mizu::coroutine::get_current_context().program_counter;
+			} else channel.push_back(registers[pc->b]);
+	#endif // MIZU_NO_HARDWARE_THREADS
 			MIZU_NEXT();
 		}
 #else

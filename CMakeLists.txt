@@ -8,6 +8,8 @@ endif()
 option(MIZU_NO_EXCEPTIONS "When enabled Mizu is built without exceptions" OFF)
 option(MIZU_BUILD_TESTS "Weather or not the test app should be built" ${PROJECT_IS_TOP_LEVEL})
 
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+
 set(CMAKE_CXX_STANDARD 20)
 if(CMAKE_BUILD_TYPE MATCHES DEBUG)
 else() # Enable IPO when not in debug mode
@@ -61,9 +63,9 @@ endif()
 
 add_subdirectory(thirdparty/libfp)
 target_link_libraries(mizu_vm INTERFACE libfp)
+target_include_directories(mizu_vm INTERFACE thirdparty)
 
 add_library(mizu::vm ALIAS mizu_vm)
-
 
 function(add_dynamic_executable NAME)
 	if(WIN32)

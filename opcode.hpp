@@ -28,6 +28,8 @@
 	#define MIZU_MAIN(...) int main(const int argc, const char** argv __VA_ARGS__)
 #endif
 
+
+
 namespace mizu {
 	using reg_t = uint16_t;
 	inline namespace registers {
