@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../opcode.hpp"
+#include "../mizu/opcode.hpp"
 
 #ifndef MIZU_NO_FFI
 
@@ -26,7 +26,7 @@
 
 
 		template<bool has_return>
-		void* call_impl(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* call_impl(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_LIB_FFI
@@ -71,7 +71,7 @@
 
 		inline namespace operations { extern "C" {
 
-			void* push_type_void(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_void(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -84,8 +84,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_void);
 
-			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -101,8 +102,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_pointer);
 
-			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -115,8 +117,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_i32);
 
-			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -129,8 +132,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_u32);
 
-			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -143,8 +147,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_i64);
 
-			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -157,8 +162,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_u64);
 
-			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -171,8 +177,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_f32);
 
-			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -185,8 +192,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(push_type_f64);
 
-			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -206,26 +214,29 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(create_interface);
 
-			void* call(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* call(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
-				return call_impl<false>(pc, registers, stack, sp);
+				return call_impl<false>(pc, registers, stack_boundary, sp);
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(call);
 
-			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
-				return call_impl<true>(pc, registers, stack, sp);
+				return call_impl<true>(pc, registers, stack_boundary, sp);
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(call_with_return);
 
-			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifdef MIZU_WASM
@@ -243,8 +254,9 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(load_library);
 
-			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 				auto lib = (loader::library*)registers[pc->a];
@@ -259,6 +271,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_OPERATION(load_library_function);
 		}}
 	}
 

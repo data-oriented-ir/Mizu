@@ -5,6 +5,9 @@
 #include <fp/pointer.hpp>
 #include <fp/dynarray.hpp>
 
+#ifndef MIZU_REGISTER_OPERATION
+#define MIZU_REGISTER_OPERATION(name)
+#endif
 
 #ifdef _WIN32
     #define MIZU_EXPORT __declspec(dllexport)
@@ -71,14 +74,14 @@ namespace mizu {
 	}
 
 #ifndef MIZU_NO_HARDWARE_THREADS
-	#define MIZU_NEXT()  registers[0] = 0; MIZU_TAIL_CALL return (++pc)->op(pc, registers, stack, sp)
+	#define MIZU_NEXT()  registers[0] = 0; MIZU_TAIL_CALL return (++pc)->op(pc, registers, stack_boundary, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) const_cast<opcode*>(program)->op(const_cast<opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
 #else // MIZU_NO_HARDWARE_THREADS
 	struct coroutine {
 		struct execution_context {
 			opcode* program_counter; // Set to null to indicate that a section is done
-			uint8_t* stack_pointer;
+			uint8_t* stack_boundary_pointer;
 			registers_and_stack* enviornment;
 
 			inline bool done() {
@@ -103,7 +106,7 @@ namespace mizu {
 			return get_context(current_context);
 		}
 
-		inline static void* next(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) { // NOTE: Next has the same signature as operations for tail recursion purposes!
+		inline static void* next(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) { // NOTE: Next has the same signature as operations for tail recursion purposes!
 			assert(sp);
 			get_current_context().stack_pointer = sp;
 
@@ -132,7 +135,7 @@ namespace mizu {
 		}
 	};
 
-	#define MIZU_NEXT() registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, stack, sp)
+	#define MIZU_NEXT() registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, stack_boundary, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) [](mizu::opcode* program_counter, mizu::registers_and_stack* enviornment) -> void* {\
 		mizu::coroutine::start(program_counter, enviornment);\

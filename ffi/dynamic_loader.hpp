@@ -13,7 +13,7 @@
 
 #include <stdexcept>
 #include <string>
-#include "../exception.hpp"
+#include "../mizu/exception.hpp"
 
 namespace mizu::loader {
 	struct error: public std::runtime_error { using std::runtime_error::runtime_error; };

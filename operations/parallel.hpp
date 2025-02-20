@@ -1,11 +1,11 @@
 #pragma once
 
-#include "opcode.hpp"
+#include "../mizu/opcode.hpp"
 #include <algorithm>
 #include <chrono>
 
 #ifndef MIZU_NO_HARDWARE_THREADS
-	#include "exception.hpp"
+	#include "../mizu/exception.hpp"
 
 	#include <thread>
 	#include <msd/channel.hpp> // TODO: Need to implement non
@@ -13,7 +13,7 @@
 
 namespace mizu {
 	// NOTE: Not a valid operation
-	inline uint64_t new_thread(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp) {
+	inline uint64_t new_thread(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {
 #ifndef MIZU_NO_HARDWARE_THREADS
 		registers_and_stack env;
 		std::copy(registers, registers + memory_size, env.memory.data());
@@ -51,41 +51,44 @@ namespace mizu {
 	inline namespace operations { extern "C" {
 
 		// Interpret register as signed
-		void* fork_relative(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* fork_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto threadPC = pc + *(int64_t*)&registers[pc->a];
-			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack, sp);
+			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack_boundary, sp);
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(fork_relative);
 
 		// Interpret arguments as signed
-		void* fork_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* fork_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto threadPC = pc + *(int32_t*)&pc->a;
-			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack, sp);
+			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack_boundary, sp);
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(fork_relative_immediate);
 
-		void* fork_to(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* fork_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto threadPC = (opcode*)registers[pc->a];
-			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack, sp);
+			registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack_boundary, sp);
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(fork_to);
 
-		void* join_thread(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* join_thread(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -109,8 +112,9 @@ namespace mizu {
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(join_thread);
 
-		void* sleep_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* sleep_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto time = std::chrono::microseconds(registers[pc->a]);
@@ -120,8 +124,9 @@ namespace mizu {
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(sleep_microseconds);
 
-		void* channel_create(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* channel_create(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto capacity = registers[pc->a];
@@ -136,8 +141,9 @@ namespace mizu {
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(channel_create);
 
-		void* channel_close(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* channel_close(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -155,8 +161,9 @@ namespace mizu {
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(channel_close);
 
-		void* channel_recieve(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* channel_recieve(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -176,8 +183,9 @@ namespace mizu {
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(channel_recieve);
 
-		void* channel_send(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
+		void* channel_send(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -197,5 +205,6 @@ namespace mizu {
 #else
 		;
 #endif
+		MIZU_REGISTER_OPERATION(channel_send);
 	}}
 }

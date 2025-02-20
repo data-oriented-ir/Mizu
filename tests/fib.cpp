@@ -1,6 +1,6 @@
 #define MIZU_NO_HARDWARE_THREADS
 #define MIZU_IMPLEMENTATION
-#include <operations.hpp>
+#include <mizu/operations.hpp>
 
 MIZU_MAIN() {
 	using namespace mizu;
