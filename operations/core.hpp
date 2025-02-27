@@ -218,7 +218,10 @@ namespace mizu {
 		void* stack_load_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]);
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *(uint64_t*)offset;
 			MIZU_NEXT();
 		}
 #else
@@ -240,7 +243,10 @@ namespace mizu {
 		void* stack_store_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]) = *(uint64_t*)&registers[pc->b];
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *(uint64_t*)offset = *(uint64_t*)&registers[pc->b];
 			MIZU_NEXT();
 		}
 #else
@@ -262,7 +268,10 @@ namespace mizu {
 		void* stack_load_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]);
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *(uint32_t*)offset;
 			MIZU_NEXT();
 		}
 #else
@@ -284,7 +293,10 @@ namespace mizu {
 		void* stack_store_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]) = *(uint32_t*)&registers[pc->b];
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *(uint32_t*)offset = *(uint32_t*)&registers[pc->b];
 			MIZU_NEXT();
 		}
 #else
@@ -306,7 +318,10 @@ namespace mizu {
 		void* stack_load_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]);
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *(uint16_t*)offset;
 			MIZU_NEXT();
 		}
 #else
@@ -328,7 +343,10 @@ namespace mizu {
 		void* stack_store_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]) = *(uint16_t*)&registers[pc->b];
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *(uint16_t*)offset = *(uint16_t*)&registers[pc->b];
 			MIZU_NEXT();
 		}
 #else
@@ -350,7 +368,10 @@ namespace mizu {
 		void* stack_load_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]);
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *offset;
 			MIZU_NEXT();
 		}
 #else
@@ -372,7 +393,10 @@ namespace mizu {
 		void* stack_store_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]) = *(uint8_t*)&registers[pc->b];
+			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
+			assert(offset > stack_boundary);
+			assert(offset <= (uint8_t*)(registers + memory_size));
+			registers[pc->out] = *offset = *(uint8_t*)&registers[pc->b];
 			MIZU_NEXT();
 		}
 #else
@@ -396,7 +420,7 @@ namespace mizu {
 		{
 			sp -= registers[pc->a];
 			assert(sp > stack_boundary);
-			assert(sp <= ((uint8_t*)registers) + memory_size);
+			assert(sp <= (uint8_t*)(registers + memory_size));
 			MIZU_NEXT();
 		}
 #else
@@ -410,7 +434,7 @@ namespace mizu {
 			auto& size = *(uint32_t*)&pc->a;
 			sp -= size;
 			assert(sp > stack_boundary);
-			assert(sp <= ((uint8_t*)registers) + memory_size);
+			assert(sp <= (uint8_t*)(registers + memory_size));
 			MIZU_NEXT();
 		}
 #else
@@ -423,7 +447,7 @@ namespace mizu {
 		{
 			sp += registers[pc->a];
 			assert(sp > stack_boundary);
-			assert(sp <= ((uint8_t*)registers) + memory_size);
+			assert(sp <= (uint8_t*)(registers + memory_size));
 			MIZU_NEXT();
 		}
 #else
@@ -437,7 +461,7 @@ namespace mizu {
 			auto& size = *(uint32_t*)&pc->a;
 			sp += size;
 			assert(sp > stack_boundary);
-			assert(sp <= ((uint8_t*)registers) + memory_size);
+			assert(sp <= (uint8_t*)(registers + memory_size));
 			MIZU_NEXT();
 		}
 #else

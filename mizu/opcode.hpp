@@ -61,7 +61,7 @@ namespace mizu {
 		opcode& set_host_pointer_upper_immediate(const void* ptr) { set_immediate(((std::size_t)ptr) >> 32); return *this; }
 	};
 
-	constexpr static reg_t memory_size = 1024 * 5;
+	constexpr static reg_t memory_size = 1024 * 5 / sizeof(uint64_t);
 	struct registers_and_stack {
 		fp::array<uint64_t, memory_size> memory;
 		uint8_t* stack_boundary;
