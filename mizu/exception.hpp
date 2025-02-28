@@ -1,9 +1,9 @@
 #pragma once
 
-#include <exception>
-
 #ifndef MIZU_NO_EXCEPTIONS
-    #define MIZU_THROW(x) throw x
+	#include <exception>
+	#define MIZU_THROW(x) throw x
 #else
-    #define MIZU_THROW(x) (assert((x, false)), abort())
+	#include <cassert>
+	#define MIZU_THROW(x) (assert((x, false)), abort())
 #endif

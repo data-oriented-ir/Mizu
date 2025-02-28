@@ -32,7 +32,7 @@ namespace mizu {
 	}
 
 #ifndef MIZU_CUSTOM_DELAY_IMPLEMENTATION
-	inline void delay(std::chrono::microseconds time, uint64_t& storage_register) {
+	inline void delay(std::chrono::microseconds time, opcode*& pc, uint64_t& storage_register) {
 	#ifndef MIZU_NO_HARDWARE_THREADS
 		std::this_thread::sleep_for(time);
 	#else
@@ -45,7 +45,7 @@ namespace mizu {
 	#endif
 	}
 #else
-	extern void delay(std::chrono::microseconds time);
+	extern void delay(std::chrono::microseconds time, opcode*& pc, uint64_t& storage_register);
 #endif
 
 	inline namespace operations { extern "C" {
@@ -118,7 +118,7 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto time = std::chrono::microseconds(registers[pc->a]);
-			delay(time, registers[pc->out]);
+			delay(time, pc, registers[pc->out]);
 			MIZU_NEXT();
 		}
 #else
