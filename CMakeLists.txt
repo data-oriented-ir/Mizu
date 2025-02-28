@@ -5,6 +5,7 @@ option(MIZU_ENABLE_FFI "Weather or not to enable the Foreign Function Interface"
 if(MIZU_ENABLE_FFI)
 	option(MIZU_ENABLE_LIB_FFI "Weather or not FFI should be implemented using libFFI (false uses our custom trampoline code)" ON)
 endif()
+option(MIZU_ENABLE_TRACING "Weather or not operations should print an indicator of their state as they are run" OFF)
 option(MIZU_NO_EXCEPTIONS "When enabled Mizu is built without exceptions" OFF)
 option(MIZU_BUILD_TESTS "Weather or not the test app should be built" ${PROJECT_IS_TOP_LEVEL})
 
@@ -58,12 +59,18 @@ if(${MIZU_DISABLE_HARDWARE_THREADS})
 endif()
 if(${MIZU_NO_EXCEPTIONS})
 	target_compile_definitions(mizu_vm INTERFACE MIZU_NO_EXCEPTIONS)
-	add_if_flag_compiles("-fno-exceptions" CMAKE_CXX_FLAGS)
+	add_if_flag_compiles("-fno-exceptions" MIZU_FLAGS_STR)
 endif()
+if(${MIZU_ENABLE_TRACING})
+	target_compile_definitions(mizu_vm INTERFACE MIZU_ENABLE_TRACING)
+endif()
+add_if_flag_compiles("-mtail-call" MIZU_FLAGS_STR)
+string(REPLACE " " ";" MIZU_FLAGS "${MIZU_FLAGS_STR}")
 
 add_subdirectory(thirdparty/libfp)
 target_link_libraries(mizu_vm INTERFACE libfp)
 target_include_directories(mizu_vm INTERFACE thirdparty)
+target_compile_options(mizu_vm INTERFACE ${MIZU_FLAGS})
 
 add_library(mizu::vm ALIAS mizu_vm)
 

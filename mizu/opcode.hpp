@@ -20,7 +20,7 @@
 #define MIZU_EXPORT_C extern "C" MIZU_EXPORT
 
 #if defined(__clang__) || defined(MIZU_FORCE_ENABLE_TAIL_CALL)
-	#define MIZU_TAIL_CALL __attribute__((musttail)) 
+	#define MIZU_TAIL_CALL __attribute__((musttail))
 #else
 	#define MIZU_TAIL_CALL 
 #endif
@@ -29,6 +29,13 @@
 	#define MIZU_MAIN(...) MIZU_EXPORT_C int dll_main(const int argc, const char** argv __VA_ARGS__)
 #else
 	#define MIZU_MAIN(...) int main(const int argc, const char** argv __VA_ARGS__)
+#endif
+
+#ifdef MIZU_ENABLE_TRACING
+	#include <iostream>
+	#define MIZU_TRACE(pc) (std::cout << __FUNCTION__ << "(" << pc->out << ", " << pc->a << ", " << pc->b << ")" << std::endl)
+#else
+	#define MIZU_TRACE(pc)
 #endif
 
 
@@ -74,14 +81,14 @@ namespace mizu {
 	}
 
 #ifndef MIZU_NO_HARDWARE_THREADS
-	#define MIZU_NEXT()  registers[0] = 0; MIZU_TAIL_CALL return (++pc)->op(pc, registers, stack_boundary, sp)
+	#define MIZU_NEXT()  MIZU_TRACE(pc); registers[0] = 0; MIZU_TAIL_CALL return (++pc)->op(pc, registers, stack_boundary, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) const_cast<opcode*>(program)->op(const_cast<opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
 #else // MIZU_NO_HARDWARE_THREADS
 	struct coroutine {
 		struct execution_context {
 			opcode* program_counter; // Set to null to indicate that a section is done
-			uint8_t* stack_boundary_pointer;
+			uint8_t* stack_pointer;
 			registers_and_stack* enviornment;
 
 			inline bool done() {
@@ -112,11 +119,11 @@ namespace mizu {
 
 			if(fpda_size(contexts) == 1) {
 				get_current_context().program_counter = ++pc;
-				MIZU_TAIL_CALL return pc->op(pc, registers, stack, sp);
+				MIZU_TAIL_CALL return pc->op(pc, registers, stack_boundary, sp);
 			} else get_current_context().program_counter = pc; // Make sure pc updates (jumps) are recorded
 
 			auto& context = get_context(next_context());
-			if(!context.program_counter) return next(pc, registers, stack, context.stack_pointer); // If this context is done... recursively run the next one
+			if(!context.program_counter) return next(pc, registers, stack_boundary, context.stack_pointer); // If this context is done... recursively run the next one
 			pc = ++context.program_counter;
 			MIZU_TAIL_CALL return pc->op(pc, context.enviornment->memory.data(), context.enviornment->stack_boundary, context.stack_pointer);
 		}
@@ -135,7 +142,7 @@ namespace mizu {
 		}
 	};
 
-	#define MIZU_NEXT() registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, stack_boundary, sp)
+	#define MIZU_NEXT() MIZU_TRACE(pc); registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, stack_boundary, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) [](mizu::opcode* program_counter, mizu::registers_and_stack* enviornment) -> void* {\
 		mizu::coroutine::start(program_counter, enviornment);\
