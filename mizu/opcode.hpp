@@ -81,7 +81,7 @@ namespace mizu {
 	}
 
 #ifndef MIZU_NO_HARDWARE_THREADS
-	#define MIZU_NEXT()  MIZU_TRACE(pc); registers[0] = 0; MIZU_TAIL_CALL return (++pc)->op(pc, registers, stack_boundary, sp)
+	#define MIZU_NEXT()  MIZU_TRACE(pc); registers[0] = 0; ++pc; MIZU_TAIL_CALL return pc->op(pc, registers, stack_boundary, sp)
 
 	#define MIZU_START_FROM_ENVIORNMENT(program, env) const_cast<opcode*>(program)->op(const_cast<opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
 #else // MIZU_NO_HARDWARE_THREADS
@@ -133,6 +133,11 @@ namespace mizu {
 			execution_context ctx{program_counter - 1, enviornment->stack_pointer, enviornment};
 			fpda_push_back(contexts, ctx);
 		}
+		
+		static void clear() {
+			if(contexts) fpda_free_and_null(contexts);
+			current_context = 0;
+		}
 
 		static bool done() { // TODO: There has to be a better way to write this!
 			fp_iterate_named(contexts, context)
@@ -151,6 +156,7 @@ namespace mizu {
 			mizu::coroutine::get_current_context().program_counter, mizu::coroutine::get_current_context().enviornment->memory.data(),\
 			mizu::coroutine::get_current_context().enviornment->stack_boundary, mizu::coroutine::get_current_context().stack_pointer)\
 		) && !mizu::coroutine::done());\
+		mizu::coroutine::clear();\
 		return result;\
 	}(const_cast<mizu::opcode*>(program), &env)
 
