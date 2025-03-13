@@ -1,7 +1,7 @@
 #define MIZU_IMPLEMENTATION
-#include <mizu/operations.hpp>
+#include <mizu/instructions.hpp>
 
-#include <ffi/operations.hpp>
+#include <ffi/instructions.hpp>
 
 MIZU_MAIN() {
 	using namespace mizu;
@@ -14,7 +14,7 @@ MIZU_MAIN() {
 	auto function = "print";
 	auto hw = "Hello 世界";
 	const static opcode program[] = {
-		opcode{find_label, 200}.set_immediate(label2int("thread")),
+		opcode{find_label, 200}.set_immediate(label2immediate("thread")),
 		opcode{ffi::push_type_void},
 		opcode{ffi::push_type_pointer},
 		opcode{ffi::create_interface, 201},
@@ -31,7 +31,7 @@ MIZU_MAIN() {
 
 		opcode{load_immediate, 1}.set_immediate(5),
 		opcode{stack_push_immediate}.set_immediate(1),
-		opcode{stack_store_u32, 0, 0, 1},
+		opcode{stack_store_u32, 0, 1},
 		opcode{load_immediate, 2}.set_immediate(6),
 		opcode{add, 3, 2, 1},
 		opcode{debug_print, 0, 3},
@@ -41,7 +41,7 @@ MIZU_MAIN() {
 		// opcode{fork_relative_immediate, 5}.set_immediate_signed(5),
 		opcode{channel_create, 220, 0},
 		opcode{fork_to, 5, 200},
-		opcode{stack_load_u32, 3, 0, 0},
+		opcode{stack_load_u32, 3},
 		opcode{debug_print, 0, 3},
 
 		opcode{load_immediate, 6}.set_immediate(7),
@@ -49,7 +49,7 @@ MIZU_MAIN() {
 		opcode{convert_to_f64, 7, 3},
 		opcode{add_f64, 8, 6, 7},
 		opcode{debug_print, 0, 8},
-		opcode{channel_recieve, 1, 220},
+		opcode{channel_receive, 1, 220},
 		opcode{channel_close, 0, 220},
 		opcode{debug_print, 0, 1},
 		opcode{join_thread, 0, 5, 0},
@@ -57,8 +57,8 @@ MIZU_MAIN() {
 
 
 		// Thread
-		opcode{label}.set_immediate(label2int("thread")),
-		opcode{find_label, 200}.set_immediate(label2int("fib")),
+		opcode{label}.set_immediate(label2immediate("thread")),
+		opcode{find_label, 200}.set_immediate(label2immediate("fib")),
 		opcode{load_immediate, 1}.set_immediate(22),
 		opcode{debug_print, 0, 1},
 		// FFI call (print)
@@ -72,8 +72,8 @@ MIZU_MAIN() {
 		opcode{halt},
 
 
-		// Recursive Fibonachi
-		opcode{label}.set_immediate(label2int("fib")),
+		// Recursive Fibonacci
+		opcode{label}.set_immediate(label2immediate("fib")),
 		// if(a0 >= 3) skip return 1
 		opcode{load_immediate, registers::t(0)}.set_immediate(3),
 		opcode{set_if_greater_equal, registers::t(0), registers::a(0), registers::t(0)},
@@ -84,11 +84,11 @@ MIZU_MAIN() {
 		// save ra, save a2, save a3
 		opcode{stack_push_immediate, 0}.set_immediate(24),
 		opcode{load_immediate, registers::t(0)}.set_immediate(24),
-		opcode{stack_store_u64, 0, registers::t(0), registers::return_address},
+		opcode{stack_store_u64, 0, registers::return_address, registers::t(0)},
 		opcode{load_immediate, registers::t(0)}.set_immediate(16),
-		opcode{stack_store_u64, 0, registers::t(0), registers::a(2)},
+		opcode{stack_store_u64, 0, registers::a(2), registers::t(0)},
 		opcode{load_immediate, registers::t(0)}.set_immediate(8),
-		opcode{stack_store_u64, 0, registers::t(0), registers::a(3)},
+		opcode{stack_store_u64, 0, registers::a(3), registers::t(0)},
 		// a2 = a0 - 1
 		opcode{load_immediate, registers::t(0)}.set_immediate(1),
 		opcode{subtract, registers::a(2), registers::a(0), registers::t(0)},
@@ -119,9 +119,9 @@ MIZU_MAIN() {
 
 	{
 		registers_and_stack env = {};
-		setup_enviornment(env);
+		setup_environment(env);
 
-		MIZU_START_FROM_ENVIORNMENT(program, env);
+		MIZU_START_FROM_ENVIRONMENT(program, env);
 	}
 
 	return 0;

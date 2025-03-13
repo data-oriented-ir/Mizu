@@ -1,6 +1,6 @@
 #define MIZU_NO_HARDWARE_THREADS
 #define MIZU_IMPLEMENTATION
-#include <mizu/operations.hpp>
+#include <mizu/instructions.hpp>
 
 MIZU_MAIN() {
 	using namespace mizu;
@@ -14,7 +14,7 @@ MIZU_MAIN() {
 		opcode{halt},
 
 
-		// Recursive Fibonachi
+		// Recursive Fibonacci
 		opcode{label}.set_immediate(label2int("fib")),
 		// if(a0 >= 3) skip return 1
 		opcode{load_immediate, registers::t(0)}.set_immediate(3),
@@ -26,11 +26,11 @@ MIZU_MAIN() {
 		// save ra, save a2, save a3
 		opcode{stack_push_immediate, 0}.set_immediate(24),
 		opcode{load_immediate, registers::t(0)}.set_immediate(24),
-		opcode{stack_store_u64, 0, registers::t(0), registers::return_address},
+		opcode{stack_store_u64, 0, registers::return_address, registers::t(0)},
 		opcode{load_immediate, registers::t(0)}.set_immediate(16),
-		opcode{stack_store_u64, 0, registers::t(0), registers::a(2)},
+		opcode{stack_store_u64, 0, registers::a(2), registers::t(0)},
 		opcode{load_immediate, registers::t(0)}.set_immediate(8),
-		opcode{stack_store_u64, 0, registers::t(0), registers::a(3)},
+		opcode{stack_store_u64, 0, registers::a(3), registers::t(0)},
 		// a2 = a0 - 1
 		opcode{load_immediate, registers::t(0)}.set_immediate(1),
 		opcode{subtract, registers::a(2), registers::a(0), registers::t(0)},
@@ -61,9 +61,9 @@ MIZU_MAIN() {
 
 	{
 		registers_and_stack env = {};
-		setup_enviornment(env);
+		setup_environment(env);
 
-		MIZU_START_FROM_ENVIORNMENT(program, env);
+		MIZU_START_FROM_ENVIRONMENT(program, env);
 	}
 
 	return 0;

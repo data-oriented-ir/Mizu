@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.21)
 project(MizuVM CXX C)
 
-option(MIZU_ENABLE_FFI "Weather or not to enable the Foreign Function Interface" ON)
+option(MIZU_ENABLE_FFI "Weather or not to enable the Foreign Function Interface." ON)
 if(MIZU_ENABLE_FFI)
-	option(MIZU_ENABLE_LIB_FFI "Weather or not FFI should be implemented using libFFI (false uses our custom trampoline code)" ON)
+	option(MIZU_ENABLE_LIB_FFI "Weather or not FFI should be implemented using libFFI (false uses our custom trampoline code)." ON)
 endif()
-option(MIZU_ENABLE_TRACING "Weather or not operations should print an indicator of their state as they are run" OFF)
-option(MIZU_NO_EXCEPTIONS "When enabled Mizu is built without exceptions" OFF)
-option(MIZU_BUILD_TESTS "Weather or not the test app should be built" ${PROJECT_IS_TOP_LEVEL})
+option(MIZU_ENABLE_TRACING "Weather or not operations should print an indicator of their state as they are run." OFF)
+option(MIZU_NO_EXCEPTIONS "When enabled Mizu is built without exceptions." OFF)
+option(MIZU_BUILD_TESTS "Weather or not the test app should be built." ${PROJECT_IS_TOP_LEVEL})
+option(MIZU_BUILD_DOCS "Weather or not the documentation should be built." OFF)
+set(MIZU_STACK_SIZE 8.0 CACHE STRING "Size in Kilobytes of Mizu's stack.")
+set(MIZU_MAXIMUM_LABEL_SEARCH 1024 CACHE STRING "The number of instructions a find_label instruction is allowed to search in either direction.")
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
@@ -46,6 +49,8 @@ endif()
 
 add_library(mizu_vm INTERFACE)
 target_include_directories(mizu_vm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(mizu_vm INTERFACE MIZU_STACK_SIZE=${MIZU_STACK_SIZE})
+target_compile_definitions(mizu_vm INTERFACE MIZU_MAXIMUM_LABEL_SEARCH=${MIZU_MAXIMUM_LABEL_SEARCH})
 if(MIZU_ENABLE_FFI AND MIZU_ENABLE_LIB_FFI)
 	target_link_libraries(mizu_vm INTERFACE ffi_static)
 elseif(MIZU_ENABLE_FFI)
@@ -92,4 +97,21 @@ if(MIZU_BUILD_TESTS)
 	target_link_libraries(tst PUBLIC mizu::vm)
 
 	add_library(tst_load SHARED tests/shared.cpp)
+endif()
+
+if(MIZU_BUILD_DOCS)
+	find_package(Doxygen)
+	set(Sphinx_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+	find_package(Sphinx REQUIRED breathe)
+
+	set(DOXYGEN_GENERATE_HTML NO)
+	set(DOXYGEN_GENERATE_XML YES)
+	configure_file(Doxyfile Doxyfile.mizu_doxygen)
+	doxygen_add_docs(mizu_doxygen CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.mizu_doxygen)
+
+	sphinx_add_docs(
+		mizu_sphinx
+		BREATHE_PROJECTS mizu_doxygen
+		BUILDER html
+		SOURCE_DIRECTORY docs)
 endif()

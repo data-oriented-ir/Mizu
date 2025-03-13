@@ -69,8 +69,11 @@
 			;
 	#endif // MIZU_IMPLEMENTATION
 
-		inline namespace operations { extern "C" {
+		inline namespace instructions { extern "C" {
 
+			/**
+			 * Adds void to the current type stack.
+			 */
 			void* push_type_void(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -84,8 +87,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_void);
+			MIZU_REGISTER_INSTRUCTION(push_type_void);
 
+			/**
+			 * Adds void* to the current type stack.
+			 */
 			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -102,8 +108,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_pointer);
+			MIZU_REGISTER_INSTRUCTION(push_type_pointer);
 
+			/**
+			 * Adds int32_t to the current type stack.
+			 */
 			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -117,8 +126,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_i32);
+			MIZU_REGISTER_INSTRUCTION(push_type_i32);
 
+			/**
+			 * Adds uint32_t to the current type stack.
+			 */
 			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -132,8 +144,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_u32);
+			MIZU_REGISTER_INSTRUCTION(push_type_u32);
 
+			/**
+			 * Adds int64_t to the current type stack.
+			 */
 			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -147,8 +162,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_i64);
+			MIZU_REGISTER_INSTRUCTION(push_type_i64);
 
+			/**
+			 * Adds uint64_t to the current type stack.
+			 */
 			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -162,8 +180,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_u64);
+			MIZU_REGISTER_INSTRUCTION(push_type_u64);
 
+			/**
+			 * Adds float to the current type stack.
+			 */
 			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -177,8 +198,11 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_f32);
+			MIZU_REGISTER_INSTRUCTION(push_type_f32);
 
+			/**
+			 * Adds double to the current type stack.
+			 */
 			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -192,8 +216,14 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_f64);
+			MIZU_REGISTER_INSTRUCTION(push_type_f64);
 
+			/**
+			 * Converts the current type stack into a interface that tells the ffi subsystem what the types of each argument are.
+			 * @note The first type on the stack is interpreted as the return type, any types after that are parameters (that one return type is required! Use push_type_void to indicate no return.)
+			 *
+			 * @param out Register to store the resulting interface in
+			 */
 			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -207,15 +237,19 @@
 				if(current_types.size() > 5) MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
 				registers[pc->out] = (size_t)current_types.clone();
 	#endif
-
-				current_types.clear();
 				MIZU_NEXT();
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(create_interface);
+			MIZU_REGISTER_INSTRUCTION(create_interface);
 
+			/**
+			 * Calls an ffi function, the functions arguments are expected to be in the argument registers (a0, a1, etc...)
+			 * 
+			 * @param a Register storing a pointer to the function to call.
+			 * @param b Register storing the interface defining how the function's arguments should be interpreted.
+			 */
 			void* call(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -224,8 +258,15 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(call);
+			MIZU_REGISTER_INSTRUCTION(call);
 
+			/**
+			 * Calls an ffi function with a returned value, the functions arguments are expected to be in the argument registers (a0, a1, etc...)
+			 * 
+			 * @param out Register storing 
+			 * @param a Register storing a pointer to the function to call.
+			 * @param b Register storing the interface defining how the function's arguments should be interpreted.
+			 */
 			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -234,8 +275,15 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(call_with_return);
+			MIZU_REGISTER_INSTRUCTION(call_with_return);
 
+			/**
+			 * Loads a DLL (or platform equivalent) with the provided path.
+			 * @note most platforms will search some set of library path for the given path
+			 * 
+			 * @param out Register to store the resulting library pointer in
+			 * @param a Register storing a null-terminated c-string pointer representing the path to search for the library.
+			 */
 			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
@@ -254,7 +302,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(load_library);
+			MIZU_REGISTER_INSTRUCTION(load_library);
 
 			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -271,7 +319,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(load_library_function);
+			MIZU_REGISTER_INSTRUCTION(load_library_function);
 		}}
 	}
 
