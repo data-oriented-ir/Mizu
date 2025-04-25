@@ -8,6 +8,7 @@
 	#include "../mizu/exception.hpp"
 
 	#include <thread>
+	#include <shared_mutex>
 	#include <msd/channel.hpp> // TODO: Need to implement non
 #endif
 
@@ -266,5 +267,201 @@ namespace mizu {
 		;
 #endif
 		MIZU_REGISTER_INSTRUCTION(channel_send);
+
+
+
+		/**
+		 * Creates a read/write lockable mutex
+		 * 
+		 * @param out Register to store the mutex reference in
+		 */
+		void* mutex_create(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto dbg = registers[pc->out] = (size_t)new std::shared_mutex;
+	#else // MIZU_NO_HARDWARE_THREADS
+			auto dbg = registers[pc->out] = 0;
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_create);
+
+		/**
+		 * Frees a mutex.
+		 * 
+		 * @param a Register storing the mutex to free.
+		 * @param b Register storing a value to overwrite \p a with (defaults to zero)
+		 */
+		void* mutex_free(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			delete mutex;
+	#endif
+			registers[pc->a] = registers[pc->b];
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_free);
+
+		/**
+		 * Blocks the current thread until an exclusive (writing) lock can be taken on the mutex
+		 * 
+		 * @param a Register storing the mutex to lock.
+		 */
+		void* mutex_write_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			mutex->lock();
+	#else // MIZU_NO_HARDWARE_THREADS
+			if(registers[pc->a] != 0) {
+				// If the mutex is locked, nudge back the program counter
+				--pc;
+			} else registers[pc->a] = -1; // Otherwise mark the lock as exclusively locked
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_write_lock);
+
+		/**
+		 * Attemps to take an exclusive (writing) lock on the mutex
+		 * 
+		 * @param out Register to store weather (1) or not (0) the lock was successfully taken in
+		 * @param a Register storing the mutex to lock.
+		 */
+		void* mutex_try_write_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			auto dbg = registers[pc->out] = mutex->try_lock();
+	#else // MIZU_NO_HARDWARE_THREADS
+			if(registers[pc->a] == 0) {
+				registers[pc->a] = -1; // Mark the lock as exclusively locked
+				auto dbg = registers[pc->out] = 1;
+			} else auto dbg = registers[pc->out] = 0;
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_try_write_lock);
+
+		/**
+		 * Releases an exclusive (writing) lock on a mutex so that another thread can lock it.
+		 * 
+		 * @param a Register storing the mutex to unlock.
+		 */
+		void* mutex_write_unlock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) 
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			mutex->unlock();
+	#else // MIZU_NO_HARDWARE_THREADS
+			if(registers[pc->a] == -1) {
+				registers[pc->a] = 0;
+			}
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_write_unlock);
+
+		/**
+		 * Blocks the current thread until a shared (reading) lock can be taken on the mutex
+		 * @note any number of threads can take a reading lock at the same time, but only one thread can have a writing lock.
+		 * 
+		 * @param a Register storing the mutex to lock.
+		 */
+		void* mutex_read_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) 
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			mutex->lock_shared();
+	#else // MIZU_NO_HARDWARE_THREADS
+			if(registers[pc->a] < 0) {
+				// If the mutex is exclusively locked, nudge back the program counter
+				--pc;
+			} else ++registers[pc->a]; // Otherwise mark another active shared lock
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_read_lock);
+
+		/**
+		 * Attemps to take an shared (reading) lock on the mutex
+		 * @note any number of threads can take a reading lock at the same time, but only one thread can have a writing lock.
+		 * 
+		 * @param out Register to store weather (1) or not (0) the lock was successfully taken in
+		 * @param a Register storing the mutex to lock.
+		 */
+		void* mutex_try_read_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) 
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			auto dbg = registers[pc->out] = mutex->try_lock_shared();
+	#else // MIZU_NO_HARDWARE_THREADS
+			if(registers[pc->a] >= 0) {
+				++registers[pc->a]; // Mark another active shared lock
+				auto dbg = registers[pc->out] = 1;
+			} else auto dbg = registers[pc->out] = 0;
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_try_read_lock);
+
+		/**
+		 * Releases a shared (reading) lock on a mutex so that another thread can lock it.
+		 * 
+		 * @param a Register storing the mutex to unlock.
+		 */
+		void* mutex_read_unlock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+	#ifndef MIZU_NO_HARDWARE_THREADS
+			auto mutex = (std::shared_mutex*)registers[pc->a];
+			if(!mutex) MIZU_THROW(std::runtime_error("Mutex does not exist."));
+			mutex->unlock_shared();
+	#else // MIZU_NO_HARDWARE_THREADS
+			if(registers[pc->a] > 0) {
+				--registers[pc->a];
+			}
+	#endif
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(mutex_read_unlock);
 	}}
 }
