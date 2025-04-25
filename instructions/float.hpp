@@ -55,105 +55,105 @@ namespace mizu {
 		MIZU_REGISTER_INSTRUCTION(convert_signed_to_f ## bits);\
 \
 		void* convert_from_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a);\
+			auto dbg = registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(convert_from_f ## bits);\
 \
 		void* convert_signed_from_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			(int64_t&)registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a);\
+			auto dbg = (int64_t&)registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(convert_signed_from_f ## bits);\
 \
 		void* add_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) + float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) + float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(add_f ## bits);\
 \
 		void* subtract_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) - float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) - float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(subtract_f ## bits);\
 \
 		void* multiply_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) * float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) * float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(multiply_f ## bits);\
 \
 		void* divide_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) / float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) / float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(divide_f ## bits);\
 \
 		void* max_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = std::max(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a), float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b));\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = std::max(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a), float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(max_f ## bits);\
 \
 		void* min_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = std::min(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a), float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b));\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = std::min(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a), float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(min_f ## bits);\
 \
 		void* sqrt_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = std::sqrt(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
+			auto dbg = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->out) = std::sqrt(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(sqrt_f ## bits);\
 \
 \
 		void* set_if_equal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) == float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) == float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_equal_f ## bits);\
 \
 		void* set_if_not_equal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) != float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) != float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_not_equal_f ## bits);\
 \
 		void* set_if_less_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) < float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) < float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_less_f ## bits);\
 \
 		void* set_if_greater_equal_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) >= float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
+			auto dbg = registers[pc->out] = float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a) >= float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->b);\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_greater_equal_f ## bits);\
 \
 \
 		void* set_if_negative_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = std::signbit(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
+			auto dbg = registers[pc->out] = std::signbit(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_negative_f ## bits);\
 \
 		void* set_if_positive_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = !std::signbit(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
+			auto dbg = registers[pc->out] = !std::signbit(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_positive_f ## bits);\
 \
 		void* set_if_infinity_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = std::isinf(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
+			auto dbg = registers[pc->out] = std::isinf(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_infinity_f ## bits);\
 \
 		void* set_if_nan_f ## bits(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {\
-			registers[pc->out] = std::isnan(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
+			auto dbg = registers[pc->out] = std::isnan(float_register<MIZU_FLOAT_TYPE(bits)>(registers, pc->a));\
 			MIZU_NEXT();\
 		}\
 		MIZU_REGISTER_INSTRUCTION(set_if_nan_f ## bits);

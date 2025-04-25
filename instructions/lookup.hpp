@@ -38,6 +38,7 @@ namespace mizu {
 
 		inline id_t register_instruction(std::string_view name, mizu::instruction_t ptr) {
 			static id_t counter = 0;
+			static id_t program_end = register_instruction("program_end", nullptr);
 			id_t id = counter++;
 			reverse_name_lookup[name] = id;
 			reverse_function_lookup[ptr] = id;
