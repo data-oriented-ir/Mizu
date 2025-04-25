@@ -183,7 +183,7 @@
 			MIZU_REGISTER_INSTRUCTION(push_type_u64);
 
 			/**
-			 * Adds float to the current type stack.
+			 * Adds `float` to the current type stack.
 			 */
 			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -201,7 +201,7 @@
 			MIZU_REGISTER_INSTRUCTION(push_type_f32);
 
 			/**
-			 * Adds double to the current type stack.
+			 * Adds `double` to the current type stack.
 			 */
 			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -217,6 +217,20 @@
 			;
 	#endif // MIZU_IMPLEMENTATION
 			MIZU_REGISTER_INSTRUCTION(push_type_f64);
+
+			/**
+			 * Clears the current type stack.
+			 */
+			void* clear_type_stack(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+	#ifdef MIZU_IMPLEMENTATION
+			{
+				current_types.clear();
+				MIZU_NEXT();
+			}
+	#else // MIZU_IMPLEMENTATION
+			;
+	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_INSTRUCTION(clear_type_stack);
 
 			/**
 			 * Converts the current type stack into a interface that tells the ffi subsystem what the types of each argument are.
@@ -237,12 +251,40 @@
 				if(current_types.size() > 5) MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
 				registers[pc->out] = (size_t)current_types.clone();
 	#endif
-				MIZU_NEXT();
+				return clear_type_stack(pc, registers, stack_boundary, sp);
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
 			MIZU_REGISTER_INSTRUCTION(create_interface);
+
+			/**
+			 * Frees the provided interface and overwrites it with the value in \p b (defaults to zero)
+			 *
+			 * @param a Register storing the interface to free.
+			 * @param b Register storing the value to overwrite a with (defaults to zero)
+			 */
+			void* free_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+	#ifdef MIZU_IMPLEMENTATION
+			{
+	#ifndef MIZU_NO_LIB_FFI
+				auto interface_ = (ffi_cif*)registers[pc->a];
+				if(!interface_) MIZU_THROW(std::runtime_error("FFI Interface does not exist!"));
+				fpda_free(interface_->arg_types - 1);
+				delete interface_;
+	#else
+	
+				auto interface_ = (wasm::types*)registers[pc->a];
+				if(!interface_) MIZU_THROW(std::runtime_error("FFI Interface does not exist!"));
+				fpda_free(interface_);
+	#endif
+				registers[pc->a] = registers[pc->b];
+				MIZU_NEXT();
+			}
+	#else // MIZU_IMPLEMENTATION
+			;
+	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_INSTRUCTION(free_interface);
 
 			/**
 			 * Calls an ffi function, the functions arguments are expected to be in the argument registers (a0, a1, etc...)
@@ -304,6 +346,13 @@
 	#endif // MIZU_IMPLEMENTATION
 			MIZU_REGISTER_INSTRUCTION(load_library);
 
+			/**
+			 * Loads a function pointer from a library.
+			 * 
+			 * @param out Register to store the resulting function pointer in
+			 * @param a Register storing a pointer to the library to load the function from.
+			 * @param b Register storing a null-terminated c-string pointer representing the (mangled) name of the function to load.
+			 */
 			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{

@@ -22,7 +22,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(allocate);
+		MIZU_REGISTER_INSTRUCTION(unsafe::allocate);
 
 		/**
 		 * Frees an allocation alloacted with \ref allocate.
@@ -41,7 +41,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(free_allocated);
+		MIZU_REGISTER_INSTRUCTION(unsafe::free_allocated);
 
 
 		/**
@@ -57,13 +57,13 @@ namespace mizu::unsafe {
 		{
 			size_t size = registers[pc->a];
 			size_t n = registers[pc->b];
-			registers[pc->out] = (size_t)__fp_malloc(size, n);
+			auto dbg = registers[pc->out] = (size_t)__fp_malloc(size, n);
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(allocate_fat_pointer);
+		MIZU_REGISTER_INSTRUCTION(unsafe::allocate_fat_pointer);
 
 		/**
 		 * Frees an allocation alloacted with \ref allocate_fat_pointer.
@@ -82,7 +82,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(free_fat_pointer);
+		MIZU_REGISTER_INSTRUCTION(unsafe::free_fat_pointer);
 
 		/**
 		 * Generates a pointer to memory on Mizu's stack.
@@ -94,13 +94,31 @@ namespace mizu::unsafe {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto offset = (int64_t&)registers[pc->a];
-			registers[pc->out] = (size_t)(sp + offset);
+			auto dbg = registers[pc->out] = (size_t)(sp + offset);
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(pointer_to_stack);
+		MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_stack);
+
+		/**
+		 * Generates a pointer to memory on the bottom of Mizu's stack.
+		 * 
+		 * @param out Register to store the pointer in
+		 * @param a Register storing a (signed) offset from the current stack pointer.
+		 */
+		void* pointer_to_stack_bottom(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			auto offset = (int64_t&)registers[pc->a];
+			auto dbg = registers[pc->out] = (size_t)((uint8_t*)(registers + memory_size) - offset);
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_stack);
 
 		/**
 		 * Generates a pointer to one of Mizu's registers
@@ -111,13 +129,13 @@ namespace mizu::unsafe {
 		void* pointer_to_register(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-			registers[pc->out] = (size_t)(registers + pc->a);
+			auto dbg = registers[pc->out] = (size_t)(registers + pc->a);
 			MIZU_NEXT();
 		}
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(pointer_to_register);
+		MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_register);
 
 		/**
 		 * Copies memory from one pointer to another
@@ -138,6 +156,69 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(copy_memory);
+		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory);
+
+		/**
+		 * Copies memory from one pointer to another
+		 * 
+		 * @param out Register storing a pointer that data should be copied to
+		 * @param a Register storing a pointer that data should be copied from
+		 * @param b (branch immediate) number of bytes that should be copied
+		 */
+		void* copy_memory_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			size_t n = pc->b;
+			auto src = (void*)registers[pc->a];
+			auto dest = (void*)registers[pc->out];
+			std::memcpy(dest, src, n);
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory_immediate);
+
+		/**
+		 * Sets all of the given memory to the provided byte
+		 * 
+		 * @param out Register storing a pointer to what should be overwritten
+		 * @param a Register storing a u8 to overwrite \p out with
+		 * @param b Register storing how many bytes should be overwritten
+		 */
+		void* set_memory(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			size_t n = registers[pc->b];
+			auto src = (uint8_t)registers[pc->a];
+			auto dest = (void*)registers[pc->out];
+			std::memset(dest, src, n);
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory);
+
+		/**
+		 * Sets all of the given memory to the provided byte
+		 * 
+		 * @param out Register storing a pointer to what should be overwritten
+		 * @param a Register storing a u8 to overwrite \p out with
+		 * @param b (branch immediate) how many bytes should be overwritten
+		 */
+		void* set_memory_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+#ifdef MIZU_IMPLEMENTATION
+		{
+			size_t n = pc->b;
+			auto src = (uint8_t)registers[pc->a];
+			auto dest = (void*)registers[pc->out];
+			std::memset(dest, src, n);
+			MIZU_NEXT();
+		}
+#else
+		;
+#endif
+		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory_immediate);
 	}}
 }
