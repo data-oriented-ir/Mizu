@@ -34,13 +34,15 @@
 			auto func = FFI_FN(registers[pc->a]);
 			auto interface_ = (ffi_cif*)registers[pc->b];
 
-			fp::dynarray<void*> args; args.reserve(interface_->nargs);
-			for(size_t i = 0; i < interface_->nargs; ++i)
-				args.push_back(&registers[registers::a(i)]);
+			{
+				fp::raii::dynarray<void*> args; args.reserve(interface_->nargs);
+				for(size_t i = 0; i < interface_->nargs; ++i)
+					args.push_back(&registers[registers::a(i)]);
 
-			if constexpr(has_return)
-				ffi_call(interface_, func, &registers[pc->out], args.data());
-			else ffi_call(interface_, func, nullptr, args.data());
+				if constexpr(has_return)
+					ffi_call(interface_, func, &registers[pc->out], args.data());
+				else ffi_call(interface_, func, nullptr, args.data());
+			}
 	#else
 			auto func = (void*)registers[pc->a];
 			auto interface_ = (fp::dynarray<wasm::types>*)registers[pc->b];

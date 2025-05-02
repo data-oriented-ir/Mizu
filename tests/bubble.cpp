@@ -69,8 +69,8 @@ MIZU_MAIN() {
 					opcode{set_if_greater_equal, registers::t(4), registers::t(1), registers::t(0)},
 					opcode{branch_to, 0, registers::t(4), 201}, // 201 -> goto top of for
 					// sp[t2] = t1, sp[t3] = t0
-					opcode{stack_store_u64, 0, registers::t(2), registers::t(1)},
-					opcode{stack_store_u64, 0, registers::t(3), registers::t(0)},
+					opcode{stack_store_u64, 0, registers::t(1), registers::t(2)},
+					opcode{stack_store_u64, 0, registers::t(0), registers::t(3)},
 					// a1 (changed) = true
 					opcode{load_immediate, registers::a(1)}.set_immediate(1),
 					// continue

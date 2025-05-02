@@ -32,6 +32,8 @@ namespace mizu {
 	constexpr uint32_t label2immediate(const fp_string label) { return label2immediate(fp_string_to_view_const(label)); }
 
 	inline namespace instructions { extern "C" {
+		constexpr auto program_end = nullptr;
+
 		/**
 		 * Noop which marks a label that can be found using mizu::find_label and then jumped to using mizu::jump_to
 		 * @param immediate Integer label value
