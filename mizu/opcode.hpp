@@ -8,6 +8,9 @@
 #ifndef MIZU_REGISTER_INSTRUCTION
 #define MIZU_REGISTER_INSTRUCTION(name)
 #endif
+#ifndef MIZU_REGISTER_INSTRUCTION_PROTOTYPE
+#define MIZU_REGISTER_INSTRUCTION_PROTOTYPE(name) 
+#endif
 
 #ifdef _WIN32
     #define MIZU_EXPORT __declspec(dllexport)
@@ -156,7 +159,17 @@ namespace mizu {
 		opcode& set_host_pointer_upper_immediate(const void* ptr) { set_immediate(((std::size_t)ptr) >> 32); return *this; }
 	};
 
+	/**
+	 * How many registers long the memory space is.
+	 * @note set using the MIZU_STACK_SIZE (measured in kilobytes) config option.
+	 */
 	constexpr static size_t memory_size = 1024 * MIZU_STACK_SIZE / sizeof(uint64_t); // 8kB by default
+	/**
+	 * How many bytes the memory space is.
+	 * @note set using the MIZU_STACK_SIZE (measured in kilobytes) config option.
+	 */
+	constexpr static size_t memory_size_bytes = memory_size * sizeof(uint64_t);
+
 	/**
 	 * Type representing holding the registers and stack space for a Mizu program or thread.
 	 */
@@ -188,6 +201,18 @@ namespace mizu {
 		env.stack_pointer = (uint8_t*)(env.memory.data() + env.memory.size());
 	}
 
+	/**
+	 * Copies the provided \p binary data into the bottom of an environment's stack.
+	 * 
+	 * @param env The enviornment to copy data into
+	 * @param binary The binary data to fill the bottom of its stack with
+	 */
+	void fill_stack_bottom(registers_and_stack& env, fp::view<const std::byte> binary) {
+		assert(binary.size() <= memory_size_bytes);
+		auto env_end = (std::byte*)(env.memory.data() + env.memory.size());
+		memcpy(env_end - binary.size(), binary.data(), binary.size());
+	}
+
 #ifndef MIZU_NO_HARDWARE_THREADS
 	/**
 	 * Executes the next instruction
@@ -200,7 +225,7 @@ namespace mizu {
 	 * @param program The program to execute
 	 * @param env The environment to execute \p program in
 	 */
-	#define MIZU_START_FROM_ENVIRONMENT(program, env) const_cast<opcode*>(program)->op(const_cast<opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
+	#define MIZU_START_FROM_ENVIRONMENT(program, env) const_cast<mizu::opcode*>(program)->op(const_cast<mizu::opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
 #else // MIZU_NO_HARDWARE_THREADS
 	struct coroutine {
 		struct execution_context {

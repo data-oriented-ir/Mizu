@@ -28,16 +28,19 @@ Take a read through the [documentorial](https://joshuadahlunr.github.io/MizuVM/)
 ## Features
 
 * Small (our test executables are less than 50kb)
-* Portable (should run anywhere with a C++ compiler, even microcontrollers and the web)
+* Portable (should run anywhere with a C++ compiler[^1], even microcontrollers and the web)
 * Fast (recursively calculates the 40th Fibonacci a full second faster than Lua)
-* Header-only[^1]
+* Header-only[^2]/Easily embeddable as a library!
 * Simple and easily extensible instructions
 * Integer and float support
 * Built in threading instructions (also includes simple go-like channels for inter-thread communication)
 * Fallback coroutine "threading" for single core machines
 * Built in FFI instructions (Mizu can call external functions in the same way it calls its own, just substitute the jump_to instruction for ffi::call)
+* Portable Binary Format and a [runner for it](https://github.com/joshuadahlunr/mizurunner).
 
-[^1] FFI support relies on [libffi](https://github.com/libffi/libffi) which is not header-only!
+[^1] Our architecture requires tail call optimization, compilers which don't support that (avr-gcc, MSVC) will compile but can only run the simplest of programs!
+
+[^2] FFI support relies on [libffi](https://github.com/libffi/libffi) which is not header-only!
 
 ## Tail Call Warning
 

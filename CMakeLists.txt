@@ -14,7 +14,7 @@ set(MIZU_MAXIMUM_LABEL_SEARCH 1024 CACHE STRING "The number of instructions a fi
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 if(CMAKE_BUILD_TYPE MATCHES DEBUG)
 else() # Enable IPO when not in debug mode
 	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
