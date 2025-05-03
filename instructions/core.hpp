@@ -514,7 +514,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(stack_pop_immediate);
+		MIZU_REGISTER_INSTRUCTION(offset_of_stack_bottom);
 
 		/**
 		 * Moves the program counter by an offset. If the offset is zero this instruction is executed again. If it is one the next instruction is executed as usual.

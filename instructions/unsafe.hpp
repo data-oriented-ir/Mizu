@@ -3,8 +3,8 @@
 #include "../mizu/opcode.hpp"
 #include <fp/pointer.h>
 
-namespace mizu::unsafe {
-	inline namespace instructions { extern "C" {
+namespace mizu {
+	namespace unsafe { inline namespace instructions { extern "C" {
 
 		/**
 		 * Allocates new memory on the host application heap.
@@ -22,7 +22,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::allocate);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(allocate);
 
 		/**
 		 * Frees an allocation alloacted with \ref allocate.
@@ -41,7 +41,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::free_allocated);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(free_allocated);
 
 
 		/**
@@ -63,7 +63,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::allocate_fat_pointer);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(allocate_fat_pointer);
 
 		/**
 		 * Frees an allocation alloacted with \ref allocate_fat_pointer.
@@ -82,7 +82,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::free_fat_pointer);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(free_fat_pointer);
 
 		/**
 		 * Generates a pointer to memory on Mizu's stack.
@@ -100,7 +100,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_stack);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(pointer_to_stack);
 
 		/**
 		 * Generates a pointer to memory on the bottom of Mizu's stack.
@@ -118,7 +118,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_stack);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(pointer_to_stack_bottom);
 
 		/**
 		 * Generates a pointer to one of Mizu's registers
@@ -135,7 +135,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_register);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(pointer_to_register);
 
 		/**
 		 * Copies memory from one pointer to another
@@ -156,7 +156,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(copy_memory);
 
 		/**
 		 * Copies memory from one pointer to another
@@ -177,7 +177,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory_immediate);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(copy_memory_immediate);
 
 		/**
 		 * Sets all of the given memory to the provided byte
@@ -198,7 +198,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory);
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(set_memory);
 
 		/**
 		 * Sets all of the given memory to the provided byte
@@ -219,6 +219,19 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory_immediate);
-	}}
+		MIZU_REGISTER_INSTRUCTION_PROTOTYPE(set_memory_immediate);
+	}}}
+
+	// Register all the unsafe functions with the lookup system
+	MIZU_REGISTER_INSTRUCTION(unsafe::allocate);
+	MIZU_REGISTER_INSTRUCTION(unsafe::free_allocated);
+	MIZU_REGISTER_INSTRUCTION(unsafe::allocate_fat_pointer);
+	MIZU_REGISTER_INSTRUCTION(unsafe::free_fat_pointer);
+	MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_stack);
+	MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_stack_bottom);
+	MIZU_REGISTER_INSTRUCTION(unsafe::pointer_to_register);
+	MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory);
+	MIZU_REGISTER_INSTRUCTION(unsafe::copy_memory_immediate);
+	MIZU_REGISTER_INSTRUCTION(unsafe::set_memory);
+	MIZU_REGISTER_INSTRUCTION(unsafe::set_memory_immediate);
 }
