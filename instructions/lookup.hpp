@@ -4,7 +4,8 @@
 #define MIZU_REGISTER_INSTRUCTION_FUNCTION(name) mizu::detail::register_instruction(#name, name)
 // NOTE: Needs to be first so that the version in opcode.hpp isn't emitted
 #ifdef MIZU_IMPLEMENTATION
-	#define MIZU_REGISTER_INSTRUCTION(name) static bool name ## _registered = MIZU_REGISTER_INSTRUCTION_FUNCTION(name) /* NOTE: Only emitted in implementation file*/
+	#define MIZU_REGISTER_INSTRUCTION_PROTOTYPE(name) extern bool name ## _registered
+	#define MIZU_REGISTER_INSTRUCTION(name) bool name ## _registered = MIZU_REGISTER_INSTRUCTION_FUNCTION(name) /* NOTE: Only emitted in implementation file*/
 #endif
 
 
@@ -38,7 +39,7 @@ namespace mizu {
 
 		inline id_t register_instruction(std::string_view name, mizu::instruction_t ptr) {
 			static id_t counter = 0;
-			static id_t program_end = register_instruction("program_end", nullptr);
+			static id_t program_end = -1; if(program_end == -1) program_end = 0, program_end = register_instruction("program_end", nullptr);
 			id_t id = counter++;
 			reverse_name_lookup[name] = id;
 			reverse_function_lookup[ptr] = id;

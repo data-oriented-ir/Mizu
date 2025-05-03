@@ -15,7 +15,8 @@
 	#endif
 
 
-	namespace mizu::ffi {
+	namespace mizu {
+		namespace ffi {
 	#ifdef MIZU_IMPLEMENTATION
 		#ifndef MIZU_NO_LIB_FFI
 			static thread_local fp::raii::dynarray<ffi_type*> current_types = {};
@@ -87,7 +88,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_void);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_void);
 
 			/**
 			 * Adds void* to the current type stack.
@@ -108,7 +109,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_pointer);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_pointer);
 
 			/**
 			 * Adds int32_t to the current type stack.
@@ -126,7 +127,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_i32);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_i32);
 
 			/**
 			 * Adds uint32_t to the current type stack.
@@ -144,7 +145,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_u32);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_u32);
 
 			/**
 			 * Adds int64_t to the current type stack.
@@ -162,7 +163,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_i64);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_i64);
 
 			/**
 			 * Adds uint64_t to the current type stack.
@@ -180,7 +181,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_u64);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_u64);
 
 			/**
 			 * Adds `float` to the current type stack.
@@ -198,7 +199,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_f32);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_f32);
 
 			/**
 			 * Adds `double` to the current type stack.
@@ -216,7 +217,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_f64);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_f64);
 
 			/**
 			 * Clears the current type stack.
@@ -230,7 +231,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(clear_type_stack);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(clear_type_stack);
 
 			/**
 			 * Converts the current type stack into a interface that tells the ffi subsystem what the types of each argument are.
@@ -256,7 +257,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(create_interface);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(create_interface);
 
 			/**
 			 * Frees the provided interface and overwrites it with the value in \p b (defaults to zero)
@@ -284,7 +285,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(free_interface);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(free_interface);
 
 			/**
 			 * Calls an ffi function, the functions arguments are expected to be in the argument registers (a0, a1, etc...)
@@ -300,7 +301,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(call);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(call);
 
 			/**
 			 * Calls an ffi function with a returned value, the functions arguments are expected to be in the argument registers (a0, a1, etc...)
@@ -317,7 +318,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(call_with_return);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(call_with_return);
 
 			/**
 			 * Loads a DLL (or platform equivalent) with the provided path.
@@ -344,7 +345,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(load_library);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(load_library);
 
 			/**
 			 * Loads a function pointer from a library.
@@ -368,8 +369,24 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(load_library_function);
-		}}
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(load_library_function);
+		}}}
+
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_void);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_pointer);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_i32);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_u32);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_i64);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_u64);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_f32);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_f64);
+		MIZU_REGISTER_INSTRUCTION(ffi::clear_type_stack);
+		MIZU_REGISTER_INSTRUCTION(ffi::create_interface);
+		MIZU_REGISTER_INSTRUCTION(ffi::free_interface);
+		MIZU_REGISTER_INSTRUCTION(ffi::call);
+		MIZU_REGISTER_INSTRUCTION(ffi::call_with_return);
+		MIZU_REGISTER_INSTRUCTION(ffi::load_library);
+		MIZU_REGISTER_INSTRUCTION(ffi::load_library_function);
 	}
 
 #endif // MIZU_NO_FFI
