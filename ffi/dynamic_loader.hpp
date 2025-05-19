@@ -52,7 +52,12 @@ namespace mizu::loader {
 		if(!out) MIZU_THROW(error(dlerror()));
 		return (library*)out;
 #elif defined(_WIN32)
+	#ifdef MIZU_LOAD_CURRENT_EXECUTABLE_PATH
 		return load_library(MIZU_LOAD_CURRENT_EXECUTABLE_PATH, false);
+	#else
+		MIZU_THROW("In order to load the current executable on windows the app must be setup as a dynamic executable with the add_dynamic_executable CMake function!");
+		return nullptr;
+	#endif
 #endif
 	}
 
@@ -64,8 +69,8 @@ namespace mizu::loader {
 #elif defined(_WIN32)
 		if(lib == nullptr) lib = load_current_executable();
 		auto out = GetProcAddress((HMODULE)lib, name.data()); 
-		if(!out) MIZU_THROW(error("Failed to find function"));
-		return out;
+		if(!out) MIZU_THROW(error("Failed to find function: " + std::string(name)));
+		return (void*)out;
 #else
 		// static_assert(false, "Dynamic loader is not supported on this platform!");
 #endif
