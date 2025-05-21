@@ -47,10 +47,10 @@ namespace mizu {
 	using reg_t = uint16_t;
 	/**
 	 * - x0 (zero) is always zero
-	 * - x1-x10 (t0-t9) are temporary registers which are expected to be saved by the caller if necessary
-	 * - x11 (ra) is the return address (callee saved)
-	 * - x12-x256 (a0-a244) are the argument registers (callee saved)
-	 * @note x12/a0 and x13/a1 are the canonical return registers
+	 * - x1-x20 (t0-t19) are temporary registers which are expected to be saved by the caller if necessary
+	 * - x21 (ra) is the return address (callee saved)
+	 * - x22-x256 (a0-a234) are the argument registers (callee saved)
+	 * @note x22/a0 and x23/a1 are the canonical return registers
 	 */
 	inline namespace registers {
 		/**
@@ -66,17 +66,17 @@ namespace mizu {
 		 * @param i The temporary register's index
 		 * @return constexpr reg_t associated value to store in an opcode
 		 */
-		constexpr reg_t t(std::size_t i) { return i + 1; assert(i <= 10); }
+		constexpr reg_t t(std::size_t i) { return i + 1; assert(i <= 20); }
 		/**
 		 * Argument register lookup
 		 *
 		 * @param i The argument register's index
 		 * @return constexpr reg_t associated value to store in an opcode
 		 */
-		constexpr reg_t a(std::size_t i) { return i + 12; }
+		constexpr reg_t a(std::size_t i) { return i + 22; }
 
 		constexpr static reg_t zero = x(0);
-		constexpr static reg_t return_address = x(11), ra = return_address;
+		constexpr static reg_t return_address = x(21), ra = return_address;
 	}
 
 	/**
