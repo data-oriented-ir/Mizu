@@ -14,20 +14,20 @@
 
 namespace mizu {
 	// NOTE: Not a valid instruction
-	inline uint64_t new_thread(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {
+	inline uint64_t new_thread(opcode* pc, registers_and_stack* env, uint8_t* sp) {
 #ifndef MIZU_NO_HARDWARE_THREADS
-		registers_and_stack env;
-		std::copy(registers, registers + memory_size, env.memory.data());
+		registers_and_stack new_env;
+		std::copy(env->memory.begin(), env->memory.end(), new_env.memory.begin());
 
-		return (uint64_t)new std::thread([pc, env = std::move(env)]() mutable {
+		return (uint64_t)new std::thread([pc, env = std::move(new_env)]() mutable {
 			setup_environment(env);
-			return pc->op(pc, env.memory.data(), env.stack_boundary, env.stack_pointer);
+			return pc->op(pc, env.memory.data(), &env, env.stack_bottom);
 		});
 #else // MIZU_NO_HARDWARE_THREADS
-		auto env = (registers_and_stack*)malloc(sizeof(registers_and_stack));
-		std::copy(registers, registers + memory_size, env->memory.data());
-		setup_environment(*env);
-		mizu::coroutine::start(pc, env);
+		auto new_env = (registers_and_stack*)malloc(sizeof(registers_and_stack));
+		std::copy(env->memory.begin(), env->memory.end(), new_env.memory.begin());
+		setup_environment(*new_env);
+		mizu::coroutine::start(pc, new_env);
 		return fpda_size(mizu::coroutine::contexts) - 1; // Return the index of the thread in the context
 #endif // MIZU_NO_HARDWARE_THREADS
 	}
@@ -60,11 +60,11 @@ namespace mizu {
 		 * @param a register storing how many instructions to jump
 		 * @note \p a is interpreted as a signed integer, allowing for negative jumps
 		 */
-		void* fork_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* fork_relative(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto threadPC = pc + *(int64_t*)&registers[pc->a];
-			auto dbg = registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack_boundary, sp);
+			auto dbg = registers[pc->out] = (uint64_t)new_thread(threadPC, env, sp);
 			MIZU_NEXT();
 		}
 #else
@@ -81,11 +81,11 @@ namespace mizu {
 		 * @param immediate how many instructions to jump
 		 * @note \p immediate is interpreted as a signed integer, allowing for negative jumps
 		 */
-		void* fork_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* fork_relative_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto threadPC = pc + *(int32_t*)&pc->a;
-			auto dbg = registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack_boundary, sp);
+			auto dbg = registers[pc->out] = (uint64_t)new_thread(threadPC, env, sp);
 			MIZU_NEXT();
 		}
 #else
@@ -100,11 +100,11 @@ namespace mizu {
 		 * @param out register to store the thread reference in
 		 * @param a register storing the address of the instruction to jump to.
 		 */
-		void* fork_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* fork_to(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto threadPC = (opcode*)registers[pc->a];
-			auto dbg = registers[pc->out] = (uint64_t)new_thread(threadPC, registers, stack_boundary, sp);
+			auto dbg = registers[pc->out] = (uint64_t)new_thread(threadPC, env, sp);
 			MIZU_NEXT();
 		}
 #else
@@ -118,7 +118,7 @@ namespace mizu {
 		 * @param a Register storing the thread to wait for
 		 * @param b Register storing a value to overwrite \p a with (defaults to zero)
 		 */
-		void* join_thread(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* join_thread(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -149,7 +149,7 @@ namespace mizu {
 		 * 
 		 * @param a Register storing the number of microseconds to sleep
 		 */
-		void* sleep_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* sleep_microseconds(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto time = std::chrono::microseconds(registers[pc->a]);
@@ -169,7 +169,7 @@ namespace mizu {
 		 * @param out Register to store the channel reference in
 		 * @param a Register storing the capacity of the channel buffer (defaults to a single item)
 		 */
-		void* channel_create(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* channel_create(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto capacity = registers[pc->a];
@@ -192,7 +192,7 @@ namespace mizu {
 		 * @param a Register storing the channel to free
 		 * @param b Register storing a value to overwrite \p a with (defaults to zero)
 		 */
-		void* channel_close(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* channel_close(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -218,7 +218,7 @@ namespace mizu {
 		 * @param out Register to store the binary blob read from the channel in.
 		 * @param a Register storing the channel to read from.
 		 */
-		void* channel_receive(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* channel_receive(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -246,7 +246,7 @@ namespace mizu {
 		 * @param a Register storing the channel to send a message to
 		 * @param b Register storing the binary blob to send to the channel.
 		 */
-		void* channel_send(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* channel_send(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -275,7 +275,7 @@ namespace mizu {
 		 * 
 		 * @param out Register to store the mutex reference in
 		 */
-		void* mutex_create(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* mutex_create(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -296,7 +296,7 @@ namespace mizu {
 		 * @param a Register storing the mutex to free.
 		 * @param b Register storing a value to overwrite \p a with (defaults to zero)
 		 */
-		void* mutex_free(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* mutex_free(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -317,7 +317,7 @@ namespace mizu {
 		 * 
 		 * @param a Register storing the mutex to lock.
 		 */
-		void* mutex_write_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* mutex_write_lock(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -343,7 +343,7 @@ namespace mizu {
 		 * @param out Register to store weather (1) or not (0) the lock was successfully taken in
 		 * @param a Register storing the mutex to lock.
 		 */
-		void* mutex_try_write_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* mutex_try_write_lock(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -368,7 +368,7 @@ namespace mizu {
 		 * 
 		 * @param a Register storing the mutex to unlock.
 		 */
-		void* mutex_write_unlock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) 
+		void* mutex_write_unlock(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp) 
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -393,7 +393,7 @@ namespace mizu {
 		 * 
 		 * @param a Register storing the mutex to lock.
 		 */
-		void* mutex_read_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) 
+		void* mutex_read_lock(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp) 
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -420,7 +420,7 @@ namespace mizu {
 		 * @param out Register to store weather (1) or not (0) the lock was successfully taken in
 		 * @param a Register storing the mutex to lock.
 		 */
-		void* mutex_try_read_lock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) 
+		void* mutex_try_read_lock(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp) 
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -445,7 +445,7 @@ namespace mizu {
 		 * 
 		 * @param a Register storing the mutex to unlock.
 		 */
-		void* mutex_read_unlock(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* mutex_read_unlock(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS

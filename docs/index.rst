@@ -82,7 +82,12 @@ Thus Mizu provides a lookup system:
 
 As well as some serialization functions which replace pointers with their identifiers automatically:
 
-.. doxygenfile:: serialize.hpp
+.. doxygenfile:: mizu/serialize.hpp
+	:project: mizu_doxygen	
+
+These serialization functions also have variants that pack some data into the bottom of the program's stack and combine the whole thing into a portable format:
+
+.. doxygenfile:: mizu/portable_format.hpp
 	:project: mizu_doxygen	
 
 Instructions
@@ -92,14 +97,14 @@ New instructions (almost) always follow this template:
 
 .. code:: c++
 	
-	void* <name> (opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {
+	void* <name> (opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp) {
 		// Instruction code goes here
 		MIZU_NEXT();
 	}
 	MIZU_REGISTER_INSTRUCTION(<name>); // Ensures the serialization system is aware of the instruction
 
 The program counter (pc) variable points to the current opcode and provides its out, a, and p parameters which can be used to lookup the relevant register in the registers variable.
-The stack boundary marks where the stack should stop and the registers begin, while stack pointer (sp) variable marks the current top of the stack.
+The enviornment includes the memory (registers and stack) as well as pointers to the stack's start and end, while stack pointer (sp) variable marks the current top of the stack.
 The code to implement the instruction should be written before the MIZU_NEXT macro which is responsible for handling the flow of control between instructions.
 
 The parameters for the following instructions are described in terms of their opcodes:
@@ -109,7 +114,16 @@ The parameters for the following instructions are described in terms of their op
 	- `signed immediate` represents a value taking the space of both a and b set using the .set_signed_immediate() function.
 	- `float immediate` represents a floating point value taking the space of both a and b set using .set_immediate_f32().
 
-.. doxygenfile:: core.hpp
+.. doxygenfile:: instructions/core.hpp
+	:project: mizu_doxygen
+
+.. doxygenfile:: instructions/parallel.hpp
+	:project: mizu_doxygen
+
+.. doxygenfile:: instructions/unsafe.hpp
+	:project: mizu_doxygen
+
+.. doxygenfile:: ffi/instructions.hpp
 	:project: mizu_doxygen
 
 Indices and tables

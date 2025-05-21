@@ -12,7 +12,7 @@ namespace mizu {
 		 * @param out Register in which a pointer to the allocated memory will be stored
 		 * @param a Register storing how many bytes to allocate
 		 */
-		void* allocate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* allocate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = registers[pc->a];
@@ -30,7 +30,7 @@ namespace mizu {
 		 * @param a Register storing the allocation to free
 		 * @param b Register storing a value to overwrite \p a with (defaults to zero)
 		 */
-		void* free_allocated(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* free_allocated(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			void* p = (void*)registers[pc->a];
@@ -52,7 +52,7 @@ namespace mizu {
 		 * @param b Register storing how many elements there are
 		 * @note The total size of this allocation is a * b
 		 */
-		void* allocate_fat_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* allocate_fat_pointer(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t size = registers[pc->a];
@@ -71,7 +71,7 @@ namespace mizu {
 		 * @param a Register storing the allocation to free
 		 * @param b Register storing a value to overwrite \p a with (defaults to zero)
 		 */
-		void* free_fat_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* free_fat_pointer(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			void* p = (void*)registers[pc->a];
@@ -90,7 +90,7 @@ namespace mizu {
 		 * @param out Register to store the pointer in
 		 * @param a Register storing a (signed) offset from the current stack pointer.
 		 */
-		void* pointer_to_stack(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* pointer_to_stack(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto offset = (int64_t&)registers[pc->a];
@@ -108,11 +108,11 @@ namespace mizu {
 		 * @param out Register to store the pointer in
 		 * @param a Register storing a (signed) offset from the current stack pointer.
 		 */
-		void* pointer_to_stack_bottom(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* pointer_to_stack_bottom(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto offset = (int64_t&)registers[pc->a];
-			auto dbg = registers[pc->out] = (size_t)((uint8_t*)(registers + memory_size) - offset);
+			auto dbg = registers[pc->out] = (size_t)(env->stack_bottom - offset);
 			MIZU_NEXT();
 		}
 #else
@@ -126,7 +126,7 @@ namespace mizu {
 		 * @param a Register to take a pointer to.
 		 * @param out Register to store the pointer in
 		 */
-		void* pointer_to_register(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* pointer_to_register(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = (size_t)(registers + pc->a);
@@ -144,7 +144,7 @@ namespace mizu {
 		 * @param a Register storing a pointer that data should be copied from
 		 * @param b Register storing how many bytes should be copied.
 		 */
-		void* copy_memory(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* copy_memory(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = registers[pc->b];
@@ -165,7 +165,7 @@ namespace mizu {
 		 * @param a Register storing a pointer that data should be copied from
 		 * @param b (branch immediate) number of bytes that should be copied
 		 */
-		void* copy_memory_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* copy_memory_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = pc->b;
@@ -186,7 +186,7 @@ namespace mizu {
 		 * @param a Register storing a u8 to overwrite \p out with
 		 * @param b Register storing how many bytes should be overwritten
 		 */
-		void* set_memory(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_memory(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = registers[pc->b];
@@ -207,7 +207,7 @@ namespace mizu {
 		 * @param a Register storing a u8 to overwrite \p out with
 		 * @param b (branch immediate) how many bytes should be overwritten
 		 */
-		void* set_memory_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_memory_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = pc->b;

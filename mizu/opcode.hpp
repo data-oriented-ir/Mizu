@@ -13,12 +13,12 @@
 #endif
 
 #ifdef _WIN32
-    #define MIZU_EXPORT __declspec(dllexport)
+	#define MIZU_EXPORT __declspec(dllexport)
 #elif __EMSCRIPTEN__
 	#include <emscripten.h>
 	#define MIZU_EXPORT EMSCRIPTEN_KEEPALIVE
 #else
-    #define MIZU_EXPORT __attribute__((__visibility__("default")))
+	#define MIZU_EXPORT __attribute__((__visibility__("default")))
 #endif
 #define MIZU_EXPORT_C extern "C" MIZU_EXPORT
 
@@ -78,7 +78,11 @@ namespace mizu {
 		constexpr static reg_t zero = x(0);
 		constexpr static reg_t return_address = x(11), ra = return_address;
 	}
-	using instruction_t = void*(*)(struct opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp);
+
+	/**
+	 * Function pointer type representing the interface every instruction is expected to have 
+	 */
+	using instruction_t = void*(*)(struct opcode* pc, uint64_t* registers, struct registers_and_stack* env, uint8_t* sp);
 
 	/**
 	 * Type which holds an instruction and (upto) 3 registers for it to act upon.
@@ -184,10 +188,10 @@ namespace mizu {
 		 */
 		uint8_t* stack_boundary;
 		/**
-		 * Pointer to the start (top/last byte of) the stack
+		 * Pointer to the start (bottom/last byte of) the stack
 		 * @note In Mizu the stack pointer counts down from the last byte of the memory until it hits the stack boundary
 		 */
-		uint8_t* stack_pointer;
+		uint8_t* stack_bottom;
 	};
 	/**
 	 * Configures a new Mizu environment
@@ -198,7 +202,7 @@ namespace mizu {
 	inline void setup_environment(registers_and_stack& env) {
 		env.memory[0] = 0;
 		env.stack_boundary = (uint8_t*)(env.memory.data() + 256);
-		env.stack_pointer = (uint8_t*)(env.memory.data() + env.memory.size());
+		env.stack_bottom = (uint8_t*)(env.memory.data() + env.memory.size());
 	}
 
 	/**
@@ -215,22 +219,22 @@ namespace mizu {
 
 #ifndef MIZU_NO_HARDWARE_THREADS
 	/**
-	 * Executes the next instruction
-	 * @note assumes all of the variables defined in the signature of instruction_t are available
-	 */
-	#define MIZU_NEXT()  MIZU_TRACE(pc); registers[0] = 0; ++pc; MIZU_TAIL_CALL return pc->op(pc, registers, stack_boundary, sp)
+	* Executes the next instruction
+	* @note assumes all of the variables defined in the signature of instruction_t are available
+	*/
+	#define MIZU_NEXT()  MIZU_TRACE(pc); registers[0] = 0; ++pc; MIZU_TAIL_CALL return pc->op(pc, registers, env, sp)
 
 	/**
-	 * Starts executing the provide program in the provided environment
-	 * @param program The program to execute
-	 * @param env The environment to execute \p program in
-	 */
-	#define MIZU_START_FROM_ENVIRONMENT(program, env) const_cast<mizu::opcode*>(program)->op(const_cast<mizu::opcode*>(program), env.memory.data(), env.stack_boundary, env.stack_pointer)
+	* Starts executing the provide program in the provided environment
+	* @param program The program to execute
+	* @param env The environment to execute \p program in
+	*/
+	#define MIZU_START_FROM_ENVIRONMENT(program, env) const_cast<mizu::opcode*>(program)->op(const_cast<mizu::opcode*>(program), env.memory.data(), &env, env.stack_bottom)
 #else // MIZU_NO_HARDWARE_THREADS
 	struct coroutine {
 		struct execution_context {
 			opcode* program_counter; // Set to null to indicate that a section is done
-			uint8_t* stack_boundary_pointer;
+			uint8_t* stack_pointer;
 			registers_and_stack* environment;
 
 			inline bool done() {
@@ -255,24 +259,24 @@ namespace mizu {
 			return get_context(current_context);
 		}
 
-		inline static void* next(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) { // NOTE: Next has the same signature as instructions for tail recursion purposes!
+		inline static void* next(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp) { // NOTE: Next has the same signature as instructions for tail recursion purposes!
 			assert(sp);
 			get_current_context().stack_pointer = sp;
 
 			if(fpda_size(contexts) == 1) {
 				get_current_context().program_counter = ++pc;
-				MIZU_TAIL_CALL return pc->op(pc, registers, stack_boundary, sp);
+				MIZU_TAIL_CALL return pc->op(pc, env, sp);
 			} else get_current_context().program_counter = pc; // Make sure pc updates (jumps) are recorded
 
 			auto& context = get_context(next_context());
-			if(!context.program_counter) return next(pc, registers, stack_boundary, context.stack_pointer); // If this context is done... recursively run the next one
+			if(!context.program_counter) return next(pc, registers, env, context.stack_pointer); // If this context is done... recursively run the next one
 			pc = ++context.program_counter;
-			MIZU_TAIL_CALL return pc->op(pc, context.environment->memory.data(), context.environment->stack_boundary, context.stack_pointer);
+			MIZU_TAIL_CALL return pc->op(pc, context.environment->memory, context.environment, context.stack_pointer);
 		}
 
 		static void start(opcode* program_counter, registers_and_stack* environment) {
 			assert(program_counter && environment);
-			execution_context ctx{program_counter - 1, environment->stack_pointer, environment};
+			execution_context ctx{program_counter - 1, enviornment.memory, environment->stack_bottom, environment};
 			fpda_push_back(contexts, ctx);
 		}
 		
@@ -289,14 +293,14 @@ namespace mizu {
 		}
 	};
 
-	#define MIZU_NEXT() MIZU_TRACE(pc); registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, stack_boundary, sp)
+	#define MIZU_NEXT() MIZU_TRACE(pc); registers[0] = 0; MIZU_TAIL_CALL return mizu::coroutine::next(pc, registers, env, sp)
 
-	#define MIZU_START_FROM_ENVIRONMENT(program, env) [](mizu::opcode* program_counter, mizu::registers_and_stack* environment) -> void* {\
+	#define MIZU_START_FROM_ENVIRONMENT(program, env) [](mizu::opcode* program_counter, registers_and_stack* environment) -> void* {\
 		mizu::coroutine::start(program_counter, environment);\
 		void* result;\
 		while(!(result = mizu::coroutine::next(\
-			mizu::coroutine::get_current_context().program_counter, mizu::coroutine::get_current_context().environment->memory.data(),\
-			mizu::coroutine::get_current_context().environment->stack_boundary, mizu::coroutine::get_current_context().stack_pointer)\
+			mizu::coroutine::get_current_context().program_counter, mizu::coroutine::get_current_context().environment.memory,\
+			mizu::coroutine::get_current_context().environment, mizu::coroutine::get_current_context().stack_pointer)\
 		) && !mizu::coroutine::done());\
 		mizu::coroutine::clear();\
 		return result;\
