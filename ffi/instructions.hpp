@@ -336,11 +336,17 @@
 				MIZU_THROW(std::runtime_error("WASM doesn't currently support dynamic libraries"));
 	#else
 				auto path = (const char*)registers[pc->a];
+		#ifndef MIZU_NO_EXCEPTIONS
 				try {
 					registers[pc->out] = (size_t)loader::load_shared(path, false);
 				} catch(loader::error) {
 					registers[pc->out] = (size_t)loader::load_shared(path, true);
 				}
+		#else
+				auto lib = loader::load_shared(path, false);
+				if(!lib) lib = loader::load_shared(path, true);
+				registers[pc->out] = (size_t)lib;
+		#endif
 	#endif
 				MIZU_NEXT();
 			}
@@ -348,6 +354,43 @@
 			;
 	#endif // MIZU_IMPLEMENTATION
 			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(load_library);
+
+			/**
+			 * Expects a list of null terminated c-string library paths in the first \p immediate argument registers.
+			 * Tries to load each library and stores a pointer to the first to load in \p out
+			 * 
+			 * @param out Register to store the resulting library in.
+			 * @param immediate number of argument (a0, a1, etc...) registers storing paths to search
+			 */
+			void* load_first_library_that_exists(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+	#ifdef MIZU_IMPLEMENTATION
+			{
+	#ifdef MIZU_WASM
+				MIZU_THROW(std::runtime_error("WASM doesn't currently support dynamic libraries"));
+	#else
+				auto size = (uint32_t&)pc->a;
+				std::array<std::string_view, 126> paths;
+				for(size_t i = 0; i < size; ++i)
+					paths[i] = {(char*)registers[a(i)]};
+
+		#ifndef MIZU_NO_EXCEPTIONS
+				try {
+					registers[pc->out] = (size_t)loader::load_first_that_exists({paths.data(), size}, false);
+				} catch(loader::error) {
+					registers[pc->out] = (size_t)loader::load_first_that_exists({paths.data(), size}, true);
+				}
+		#else
+				auto lib = loader::load_first_that_exists({paths.data(), size}, false);
+				if(!lib) lib = loader::load_first_that_exists({paths.data(), size}, true);
+				registers[pc->out] = (size_t)lib;
+		#endif
+	#endif
+				MIZU_NEXT();
+			}
+	#else // MIZU_IMPLEMENTATION
+			;
+	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(load_first_library_that_exists);
 
 			/**
 			 * Loads a function pointer from a library.
@@ -388,6 +431,7 @@
 		MIZU_REGISTER_INSTRUCTION(ffi::call);
 		MIZU_REGISTER_INSTRUCTION(ffi::call_with_return);
 		MIZU_REGISTER_INSTRUCTION(ffi::load_library);
+		MIZU_REGISTER_INSTRUCTION(ffi::load_first_library_that_exists);
 		MIZU_REGISTER_INSTRUCTION(ffi::load_library_function);
 	}
 

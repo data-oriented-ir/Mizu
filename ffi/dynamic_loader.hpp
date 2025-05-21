@@ -13,6 +13,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <fp/pointer.hpp>
 #include "../mizu/exception.hpp"
 
 namespace mizu::loader {
@@ -44,6 +45,20 @@ namespace mizu::loader {
 	}
 	inline library* load_library(std::string_view path, bool append_platform_decorator = false) {
 		return load_shared(path, append_platform_decorator);
+	}
+
+	inline library* load_first_that_exists(fp::view<const std::string_view> paths, bool append_platform_decorator = false) {
+		for(auto path: paths) {
+#ifndef MIZU_NO_EXCEPTIONS
+			try {
+#endif
+				auto lib = load_shared(path, append_platform_decorator);
+				if(lib) return lib;
+#ifndef MIZU_NO_EXCEPTIONS
+			} catch(error) { /* do nothing */}
+#endif
+		}
+		MIZU_THROW(error("Failed to load any of the provided libraries!"));
 	}
 
 	inline library* load_current_executable() {
