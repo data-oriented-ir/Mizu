@@ -190,9 +190,8 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = registers[pc->b];
-			auto src = (uint8_t)registers[pc->a];
 			auto dest = (void*)registers[pc->out];
-			std::memset(dest, src, n);
+			std::memset(dest, registers[pc->a], n);
 			MIZU_NEXT();
 		}
 #else
@@ -211,9 +210,8 @@ namespace mizu {
 #ifdef MIZU_IMPLEMENTATION
 		{
 			size_t n = pc->b;
-			auto src = (uint8_t)registers[pc->a];
 			auto dest = (void*)registers[pc->out];
-			std::memset(dest, src, n);
+			std::memset(dest, registers[pc->a], n);
 			MIZU_NEXT();
 		}
 #else

@@ -114,6 +114,9 @@ The parameters for the following instructions are described in terms of their op
 	- `signed immediate` represents a value taking the space of both a and b set using the .set_signed_immediate() function.
 	- `float immediate` represents a floating point value taking the space of both a and b set using .set_immediate_f32().
 
+.. doxygenfile:: instructions/debug.hpp
+	:project: mizu_doxygen
+
 .. doxygenfile:: instructions/core.hpp
 	:project: mizu_doxygen
 
@@ -122,6 +125,23 @@ The parameters for the following instructions are described in terms of their op
 
 .. doxygenfile:: instructions/unsafe.hpp
 	:project: mizu_doxygen
+
+Floating Point Instructions
+----------
+
+.. doxygenfile:: instructions/f32.hpp
+	:project: mizu_doxygen
+
+.. doxygenfile:: instructions/f64.hpp
+	:project: mizu_doxygen
+
+FFI Instructions
+----------
+
+Please note that the FFI instructions aren't included in the default mizu/instructions header. To include them please add:
+.. code:: c++
+	
+	#include <ffi/instructions.hpp>
 
 .. doxygenfile:: ffi/instructions.hpp
 	:project: mizu_doxygen
