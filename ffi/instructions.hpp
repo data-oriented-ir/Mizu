@@ -27,7 +27,7 @@
 
 
 		template<bool has_return>
-		void* call_impl(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* call_impl(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_LIB_FFI
@@ -77,7 +77,7 @@
 			/**
 			 * Adds void to the current type stack.
 			 */
-			void* push_type_void(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_void(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -95,7 +95,7 @@
 			/**
 			 * Adds void* to the current type stack.
 			 */
-			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_pointer(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -116,7 +116,7 @@
 			/**
 			 * Adds int32_t to the current type stack.
 			 */
-			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_i32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -134,7 +134,7 @@
 			/**
 			 * Adds uint32_t to the current type stack.
 			 */
-			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_u32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -152,7 +152,7 @@
 			/**
 			 * Adds int64_t to the current type stack.
 			 */
-			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_i64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -170,7 +170,7 @@
 			/**
 			 * Adds uint64_t to the current type stack.
 			 */
-			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_u64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -188,7 +188,7 @@
 			/**
 			 * Adds `float` to the current type stack.
 			 */
-			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_f32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -206,7 +206,7 @@
 			/**
 			 * Adds `double` to the current type stack.
 			 */
-			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* push_type_f64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -224,7 +224,7 @@
 			/**
 			 * Clears the current type stack.
 			 */
-			void* clear_type_stack(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* clear_type_stack(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 				current_types.clear();
@@ -241,7 +241,7 @@
 			 *
 			 * @param out Register to store the resulting interface in
 			 */
-			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* create_interface(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -254,7 +254,7 @@
 				if(current_types.size() > 5) MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
 				registers[pc->out] = (size_t)current_types.clone();
 	#endif
-				return clear_type_stack(pc, registers, stack_boundary, sp);
+				return clear_type_stack(pc, registers, env, sp);
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
@@ -267,7 +267,7 @@
 			 * @param a Register storing the interface to free.
 			 * @param b Register storing the value to overwrite a with (defaults to zero)
 			 */
-			void* free_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* free_interface(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifndef MIZU_NO_LIB_FFI
@@ -295,10 +295,10 @@
 			 * @param a Register storing a pointer to the function to call.
 			 * @param b Register storing the interface defining how the function's arguments should be interpreted.
 			 */
-			void* call(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* call(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
-				return call_impl<false>(pc, registers, stack_boundary, sp);
+				return call_impl<false>(pc, registers, env, sp);
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
@@ -312,10 +312,10 @@
 			 * @param a Register storing a pointer to the function to call.
 			 * @param b Register storing the interface defining how the function's arguments should be interpreted.
 			 */
-			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* call_with_return(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
-				return call_impl<true>(pc, registers, stack_boundary, sp);
+				return call_impl<true>(pc, registers, env, sp);
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
@@ -329,7 +329,7 @@
 			 * @param out Register to store the resulting library pointer in
 			 * @param a Register storing a null-terminated c-string pointer representing the path to search for the library.
 			 */
-			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* load_library(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifdef MIZU_WASM
@@ -362,7 +362,7 @@
 			 * @param out Register to store the resulting library in.
 			 * @param immediate number of argument (a0, a1, etc...) registers storing paths to search
 			 */
-			void* load_first_library_that_exists(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* load_first_library_that_exists(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 	#ifdef MIZU_WASM
@@ -399,7 +399,7 @@
 			 * @param a Register storing a pointer to the library to load the function from.
 			 * @param b Register storing a null-terminated c-string pointer representing the (mangled) name of the function to load.
 			 */
-			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* load_library_function(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
 				auto lib = (loader::library*)registers[pc->a];

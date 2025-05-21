@@ -39,7 +39,7 @@ namespace mizu {
 		 * @param immediate Integer label value
 		 * @note mizu::label2int can convert a string into an immediate for this function
 		 */
-		void* label(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* label(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			MIZU_NEXT();
@@ -58,7 +58,7 @@ namespace mizu {
 		 * @note This function first searches below it in the program then searches above it if the label can't be found. 
 		 *	The closest matching label following these rules will be found if there is any ambiguity.
 		 */
-		void* find_label(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* find_label(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto needle = *(uint32_t*)&pc->a;
@@ -85,7 +85,7 @@ namespace mizu {
 		/**
 		 * Ends execution of the program or thread.
 		 */
-		void* halt(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* halt(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifdef MIZU_NO_HARDWARE_THREADS
@@ -102,7 +102,7 @@ namespace mizu {
 		 * Prints the value stored in a register in several formats
 		 * @param a the register to print the value of
 		 */
-		void* debug_print(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* debug_print(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			printf("u64 = %lu, i64 = %ld, f64 = %f, f32 = %f\n", registers[pc->a], (int64_t&)registers[pc->a], (double&)registers[pc->a], (float&)registers[pc->a]);
@@ -118,7 +118,7 @@ namespace mizu {
 		 * Prints the value stored in a register in several formats including binary
 		 * @param a the register to print the value of
 		 */
-		void* debug_print_binary(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* debug_print_binary(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			constexpr static auto print_binary = [](void* ptr){ // From: https://stackoverflow.com/a/3974138
@@ -134,7 +134,7 @@ namespace mizu {
 
 			print_binary(&registers[pc->a]);
 			printf(", ");
-			return debug_print(pc, registers, stack_boundary, sp);
+			return debug_print(pc, registers, env, sp);
 		}
 #else
 		;
@@ -147,7 +147,7 @@ namespace mizu {
 		 * @param immediate the value to store in \p out
 		 * @note Since immediate are only 32bit numbers this function sets the bottom 32 bits of our 64 bit registers.
 		 */
-		void* load_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* load_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = *(uint32_t*)&pc->a;
@@ -164,7 +164,7 @@ namespace mizu {
 		 * @param immediate the value to store in \p out
 		 * @warning The load immediate instruction overwrites the entire register, thus it should be called before load_upper_immediate!
 		 */
-		void* load_upper_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* load_upper_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] |= uint64_t(*(uint32_t*)&pc->a) << 32;
@@ -180,7 +180,7 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register whose value to convert
 		 */
-		void* convert_to_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* convert_to_u64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = ((uint64_t&)registers[pc->out]) = registers[pc->a];
@@ -191,7 +191,7 @@ namespace mizu {
 #endif
 		MIZU_REGISTER_INSTRUCTION(convert_to_u64);
 
-// 		void* convert_to_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+// 		void* convert_to_i64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 // #ifdef MIZU_IMPLEMENTATION
 // 		{
 // 			auto dbg = ((int64_t&)registers[pc->out]) = registers[pc->a];
@@ -207,7 +207,7 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register whose value to convert
 		 */
-		void* convert_to_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* convert_to_u32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = ((uint32_t&)registers[pc->out]) = registers[pc->a];
@@ -218,7 +218,7 @@ namespace mizu {
 #endif
 		MIZU_REGISTER_INSTRUCTION(convert_to_u32);
 
-// 		void* convert_to_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+// 		void* convert_to_i32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 // #ifdef MIZU_IMPLEMENTATION
 // 		{
 // 			auto dbg = ((int32_t&)registers[pc->out]) = registers[pc->a];
@@ -234,7 +234,7 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register whose value to convert
 		 */
-		void* convert_to_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* convert_to_u16(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = ((uint16_t&)registers[pc->out]) = registers[pc->a];
@@ -245,7 +245,7 @@ namespace mizu {
 #endif
 		MIZU_REGISTER_INSTRUCTION(convert_to_u16);
 
-// 		void* convert_to_i16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+// 		void* convert_to_i16(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 // #ifdef MIZU_IMPLEMENTATION
 // 		{
 // 			auto dbg = ((int16_t&)registers[pc->out]) = registers[pc->a];
@@ -261,7 +261,7 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register whose value to convert
 		 */
-		void* convert_to_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* convert_to_u8(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = ((uint8_t&)registers[pc->out]) = registers[pc->a];
@@ -277,12 +277,12 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_load_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_load_u64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *(uint64_t*)offset;
 			MIZU_NEXT();
 		}
@@ -297,12 +297,12 @@ namespace mizu {
 		 * @param a register storing the value to copy
 		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_store_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_store_u64(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->b]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *(uint64_t*)offset = *(uint64_t*)&registers[pc->a];
 			MIZU_NEXT();
 		}
@@ -316,12 +316,12 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_load_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_load_u32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *(uint32_t*)offset;
 			MIZU_NEXT();
 		}
@@ -336,12 +336,12 @@ namespace mizu {
 		 * @param a register storing the value to copy
 		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_store_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_store_u32(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->b]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *(uint32_t*)offset = *(uint32_t*)&registers[pc->a];
 			MIZU_NEXT();
 		}
@@ -355,12 +355,12 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_load_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_load_u16(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *(uint16_t*)offset;
 			MIZU_NEXT();
 		}
@@ -375,12 +375,12 @@ namespace mizu {
 		 * @param a register storing the value to copy
 		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_store_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_store_u16(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->b]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *(uint16_t*)offset = *(uint16_t*)&registers[pc->a];
 			MIZU_NEXT();
 		}
@@ -394,12 +394,12 @@ namespace mizu {
 		 * @param out register to store the result in
 		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_load_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_load_u8(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->a]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *offset;
 			MIZU_NEXT();
 		}
@@ -414,12 +414,12 @@ namespace mizu {
 		 * @param a register storing the value to copy
 		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
 		 */
-		void* stack_store_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_store_u8(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			uint8_t* offset = (uint8_t*)(sp + registers[pc->b]);
-			assert(offset > stack_boundary);
-			assert(offset <= (uint8_t*)(registers + memory_size));
+			assert(offset > env->stack_boundary);
+			assert(offset <= env->stack_bottom);
 			auto dbg = registers[pc->out] = *offset = *(uint8_t*)&registers[pc->a];
 			MIZU_NEXT();
 		}
@@ -432,12 +432,12 @@ namespace mizu {
 		 * Subtracts a value from the stack pointer. In other words reserves some additional memory on the stack.
 		 * @param a register storing how many bytes to reserve
 		 */
-		void* stack_push(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_push(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			sp -= registers[pc->a];
-			assert(sp > stack_boundary);
-			assert(sp <= (uint8_t*)(registers + memory_size));
+			assert(sp > env->stack_boundary);
+			assert(sp <= env->stack_bottom);
 			MIZU_NEXT();
 		}
 #else
@@ -449,13 +449,13 @@ namespace mizu {
 		 * Subtracts a value from the stack pointer. In other words reserves some additional memory on the stack.
 		 * @param immediate how many bytes to reserve
 		 */
-		void* stack_push_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_push_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto& size = *(uint32_t*)&pc->a;
 			sp -= size;
-			assert(sp > stack_boundary);
-			assert(sp <= (uint8_t*)(registers + memory_size));
+			assert(sp > env->stack_boundary);
+			assert(sp <= env->stack_bottom);
 			MIZU_NEXT();
 		}
 #else
@@ -467,12 +467,12 @@ namespace mizu {
 		 * Adds a value to stack pointer. In other words releases reserved memory on the stack.
 		 * @param a register storing how many bytes to release
 		 */
-		void* stack_pop(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_pop(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			sp += registers[pc->a];
-			assert(sp > stack_boundary);
-			assert(sp <= (uint8_t*)(registers + memory_size));
+			assert(sp > env->stack_boundary);
+			assert(sp <= env->stack_bottom);
 			MIZU_NEXT();
 		}
 #else
@@ -484,13 +484,13 @@ namespace mizu {
 		 * Adds a value to stack pointer. In other words releases reserved memory on the stack.
 		 * @param immediate how many bytes to release
 		 */
-		void* stack_pop_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* stack_pop_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto& size = *(uint32_t*)&pc->a;
 			sp += size;
-			assert(sp > stack_boundary);
-			assert(sp <= (uint8_t*)(registers + memory_size));
+			assert(sp > env->stack_boundary);
+			assert(sp <= env->stack_bottom);
 			MIZU_NEXT();
 		}
 #else
@@ -503,13 +503,13 @@ namespace mizu {
 		 * @param out register to store the calculated offset in
 		 * @param a register storing a signed offset relative to the bottom of the stack
 		 */
-		void* offset_of_stack_bottom(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* offset_of_stack_bottom(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto offset = (int64_t&)registers[pc->a];
-			auto bottom = ((uint8_t*)(registers + memory_size) - offset);
-			assert(bottom > stack_boundary);
-			assert(bottom <= (uint8_t*)(registers + memory_size));
+			auto bottom = env->stack_bottom - offset;
+			assert(bottom > env->stack_boundary);
+			assert(bottom <= env->stack_bottom);
 			auto dbg = registers[pc->out] = sp - bottom;
 			MIZU_NEXT();
 		}
@@ -525,7 +525,7 @@ namespace mizu {
 		 * @param a register storing how many instructions to jump
 		 * @note \p a is interpreted as a signed integer, allowing for negative jumps
 		 */
-		void* jump_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* jump_relative(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto a = registers[pc->a];
@@ -545,7 +545,7 @@ namespace mizu {
 		 * @param immediate how many instructions to jump
 		 * @note \p immediate is interpreted as a signed integer, allowing for negative jumps
 		 */
-		void* jump_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* jump_relative_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = (uint64_t)(pc + 1);
@@ -562,7 +562,7 @@ namespace mizu {
 		 * @param out register to store the address of the instruction that should be executed next.
 		 * @param a register storing the address of the instruction to jump to.
 		 */
-		void* jump_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* jump_to(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = (uint64_t)(pc + 1);
@@ -581,7 +581,7 @@ namespace mizu {
 		 * @param b register storing how many instructions to jump
 		 * @note \p b is interpreted as a signed integer, allowing for negative jumps
 		 */
-		void* branch_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* branch_relative(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = (uint64_t)(pc + 1);
@@ -601,7 +601,7 @@ namespace mizu {
 		 * @param b (branch immediate) how many instructions to jump
 		 * @note \p b is interpreted as a signed integer, allowing for negative jumps
 		 */
-		void* branch_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* branch_relative_immediate(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = (uint64_t)(pc + 1);
@@ -620,7 +620,7 @@ namespace mizu {
 		 * @param a register storing a condition, zero indicates no jump while any other number indicates that a jump should occur
 		 * @param b register storing the address of the instruction to jump to.
 		 */
-		void* branch_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* branch_to(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = (uint64_t)(pc + 1);
@@ -639,7 +639,7 @@ namespace mizu {
 		 * @param a register storing the first value to compare
 		 * @param b register storing the second value to compare
 		 */
-		void* set_if_equal(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_if_equal(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] == registers[pc->b];
@@ -656,7 +656,7 @@ namespace mizu {
 		 * @param a register storing the first value to compare
 		 * @param b register storing the second value to compare
 		 */
-		void* set_if_not_equal(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_if_not_equal(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] != registers[pc->b];
@@ -673,7 +673,7 @@ namespace mizu {
 		 * @param a register storing the first value to compare
 		 * @param b register storing the second value to compare
 		 */
-		void* set_if_less(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_if_less(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] < registers[pc->b];
@@ -691,7 +691,7 @@ namespace mizu {
 		 * @param b register storing the second value to compare
 		 * @note Both \p a and \p b are treated as being signed
 		 */
-		void* set_if_less_signed(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_if_less_signed(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = *(int64_t*)&registers[pc->a] < *(int64_t*)&registers[pc->b];
@@ -708,7 +708,7 @@ namespace mizu {
 		 * @param a register storing the first value to compare
 		 * @param b register storing the second value to compare
 		 */
-		void* set_if_greater_equal(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_if_greater_equal(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] >= registers[pc->b];
@@ -726,7 +726,7 @@ namespace mizu {
 		 * @param b register storing the second value to compare
 		 * @note Both \p a and \p b are treated as being signed
 		 */
-		void* set_if_greater_equal_signed(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* set_if_greater_equal_signed(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = *(int64_t*)&registers[pc->a] >= *(int64_t*)&registers[pc->b];
@@ -743,7 +743,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* add(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* add(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] + registers[pc->b];
@@ -760,7 +760,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* subtract(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* subtract(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] - registers[pc->b];
@@ -777,7 +777,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* multiply(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* multiply(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] * registers[pc->b];
@@ -794,7 +794,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* divide(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* divide(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] / registers[pc->b];
@@ -811,7 +811,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* modulus(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* modulus(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] % registers[pc->b];
@@ -828,7 +828,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* shift_left(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* shift_left(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] << registers[pc->b];
@@ -845,7 +845,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* shift_right_logical(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* shift_right_logical(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] >> registers[pc->b];
@@ -862,7 +862,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* shift_right_arithmetic(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* shift_right_arithmetic(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = *(int64_t*)&registers[pc->a] >> registers[pc->b];
@@ -879,7 +879,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* bitwise_xor(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* bitwise_xor(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] ^ registers[pc->b];
@@ -896,7 +896,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* bitwise_and(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* bitwise_and(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] & registers[pc->b];
@@ -913,7 +913,7 @@ namespace mizu {
 		 * @param a register storing first value
 		 * @param b register storing second value
 		 */
-		void* bitwise_or(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* bitwise_or(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 			auto dbg = registers[pc->out] = registers[pc->a] | registers[pc->b];
