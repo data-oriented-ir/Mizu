@@ -1,4 +1,8 @@
+![Mizu's Mascot](https://github.com/joshuadahlunr/MizuVM/blob/main/docs/mizu.svg)
+
 # Mizu
+
+[![Unlicensed](https://flat.badgen.net/github/license/joshuadahlunr/mizuvm)](https://github.com/joshuadahlunr/mizuvm/blob/main/LICENSE) 
 
 Mizu is a lightweight easily extensible interpreter loosely modeled off of RISC-V assembly.
 
