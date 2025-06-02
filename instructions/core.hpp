@@ -9,7 +9,7 @@ namespace mizu {
 	/**
 	 * Converts a string label to an immediate value
 	 * @note Only the first 4 characters of the label are relevant.
-	 * 
+	 *
 	 * @param label string_view to be converted
 	 * @return constexpr uint32_t the immediate
 	 */
@@ -25,7 +25,7 @@ namespace mizu {
 	/**
 	 * Converts a string label to an immediate value
 	 * @note Only the first 4 characters of the label are relevant.
-	 * 
+	 *
 	 * @param label string to be converted
 	 * @return constexpr uint32_t the immediate
 	 */
@@ -55,23 +55,28 @@ namespace mizu {
 		 * @param immediate the label to search for
 		 * @note Unlike every other assembly this is a runtime function, time is spent scanning the program to find the label.
 		 *	It is this recommended to cluster these instructions near the beginning of the program where they won't be executed multiple times.
-		 * @note This function first searches below it in the program then searches above it if the label can't be found. 
+		 * @note This function first searches below it in the program then searches above it if the label can't be found.
 		 *	The closest matching label following these rules will be found if there is any ambiguity.
 		 */
 		void* find_label(opcode* pc, uint64_t* registers, registers_and_stack* env, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
+			auto program_start = env->calculate_program_start(pc);
+			auto program_end = env->calculate_program_end(pc);
 			auto needle = *(uint32_t*)&pc->a;
 			registers[pc->out] = 0;
-			for(size_t i = 0; i < MIZU_MAXIMUM_LABEL_SEARCH; ++i)
-				if(auto l = pc + i; l->op == label && *(uint32_t*)&l->a == needle) {
-					registers[pc->out] = (uint64_t)l;
+
+			// Try to find searching till the end
+			for(auto cur = pc; cur != program_end; ++cur)
+				if(cur->op == label && *(uint32_t*)&cur->a == needle) {
+					registers[pc->out] = (uint64_t)cur;
 					break;
 				}
+			// If we failed to find try searching till the beginning
 			if(registers[pc->out] == 0)
-				for(size_t i = 0; i < MIZU_MAXIMUM_LABEL_SEARCH; ++i)
-					if(auto l = pc - i; l->op == label && *(uint32_t*)&l->a == needle) {
-						registers[pc->out] = (uint64_t)l;
+				for(auto cur = pc; cur != program_start; --cur)
+					if(cur->op == label && *(uint32_t*)&cur->a == needle) {
+						registers[pc->out] = (uint64_t)cur;
 						break;
 					}
 			auto dbg = (opcode*)registers[pc->out];

@@ -119,7 +119,7 @@ MIZU_MAIN() {
 
 	{
 		registers_and_stack env = {};
-		setup_environment(env);
+		setup_environment(env, program, program + sizeof(program)/sizeof(program[0]));
 
 		MIZU_START_FROM_ENVIRONMENT(program, env);
 	}
