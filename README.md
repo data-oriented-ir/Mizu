@@ -2,11 +2,11 @@
 
 # Mizu
 
-[![Unlicensed](https://flat.badgen.net/github/license/joshuadahlunr/mizuvm)](https://github.com/joshuadahlunr/mizuvm/blob/main/LICENSE) 
+[![Unlicensed](https://flat.badgen.net/github/license/joshuadahlunr/mizuvm)](https://github.com/joshuadahlunr/mizuvm/blob/main/LICENSE) [![DOI](https://flat.badgen.net/static/DOI/10.5281%2Fzenodo.15578022/cyan)](https://doi.org/10.5281/zenodo.15578021)
 
-Mizu is a lightweight easily extensible interpreter loosely modeled off of RISC-V assembly.
+Mizu is a lightweight, easily extensible interpreter loosely modeled after RISC-V assembly.
 
-Programs are represented as an array of opcodes which are then allowed to manipulate virtual registers and a virtual stack.
+Programs are represented as an array of opcodes, which are then allowed to manipulate virtual registers and a virtual stack.
 The simplest "useful" Mizu program is:
 
 ```cpp
@@ -37,24 +37,25 @@ Take a read through the [documentorial](https://joshuadahlunr.github.io/MizuVM/)
 * Header-only[^2]/Easily embeddable as a library!
 * Simple and easily extensible instructions
 * Integer and float support
-* Built in threading instructions (also includes simple go-like channels for inter-thread communication)
-* Fallback coroutine "threading" for single core machines
+* Built-in threading instructions (also includes simple go-like channels for inter-thread communication)
+* Fallback coroutine "threading" for single-core machines
 * Built in FFI instructions (Mizu can call external functions in the same way it calls its own, just substitute the jump_to instruction for ffi::call)
 * Portable Binary Format and a [runner for it](https://github.com/joshuadahlunr/mizurunner).
 
-[^1] Our architecture requires tail call optimization, compilers which don't support that (avr-gcc, MSVC) will compile but can only run the simplest of programs!
+[^1] Our architecture requires tail call optimization; compilers that don't support that (avr-gcc, MSVC) will compile but can only run the simplest of programs!
 
 [^2] FFI support relies on [libffi](https://github.com/libffi/libffi) which is not header-only!
 
 ## Tail Call Warning
 
-Mizu makes heavy use of tail call optimization, if this optimization is not present programs will likely crash.
-At the moment only clang has been configured to support tail call operations in debug mode.
-**Visual Studio will likely fail!** Testing has shown the Microsoft's Visual Studio compiler doesn't tail call optimize, thus on Windows using Msys or Mingw is necessary!
+Mizu makes heavy use of tail call optimization; if this optimization is not present, programs will likely crash.
+At the moment, only clang has been configured to support tail call operations in debug mode.
+**Visual Studio will likely fail!**
+Testing has shown that Microsoft's Visual Studio compiler doesn't tail-call optimize; thus, on Windows, using Msys or MinGW is necessary.
 
 ## How to Integrate
 
-The easiest way to integrate Mizu is to add it as a sub_directory using CMake:
+The easiest way to integrate Mizu is to add it as a subdirectory using CMake:
 
 ```cmake
 add_subdirectory(path/to/mizu)
@@ -62,7 +63,7 @@ add_subdirectory(path/to/mizu)
 target_link_libraries(your_cmake_target PUBLIC mizu::vm)
 ```
 
-Then just include `mizu/instructions.hpp` and define `MIZU_IMPLEMENTATION` in one of your source files.
+Then include `mizu/instructions.hpp` and define `MIZU_IMPLEMENTATION` in one of your source files.
 
 ### Hard Way
 
