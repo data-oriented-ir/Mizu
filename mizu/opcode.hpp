@@ -9,7 +9,7 @@
 #define MIZU_REGISTER_INSTRUCTION(name)
 #endif
 #ifndef MIZU_REGISTER_INSTRUCTION_PROTOTYPE
-#define MIZU_REGISTER_INSTRUCTION_PROTOTYPE(name) 
+#define MIZU_REGISTER_INSTRUCTION_PROTOTYPE(name)
 #endif
 
 #ifdef _WIN32
@@ -80,7 +80,7 @@ namespace mizu {
 	}
 
 	/**
-	 * Function pointer type representing the interface every instruction is expected to have 
+	 * Function pointer type representing the interface every instruction is expected to have
 	 */
 	using instruction_t = void*(*)(struct opcode* pc, uint64_t* registers, struct registers_and_stack* env, uint8_t* sp);
 
@@ -192,22 +192,65 @@ namespace mizu {
 		 * @note In Mizu the stack pointer counts down from the last byte of the memory until it hits the stack boundary
 		 */
 		uint8_t* stack_bottom;
+
+		/**
+		 * Pointer to the start of the program
+		 */
+		const opcode* program_start = nullptr;
+		/**
+		 * Pointer to the end of the program
+		 */
+		const opcode* program_end = nullptr;
+
+		/**
+		 * Calculates where the program starts (or a estimate based on the current program counter if null)
+		 * 
+		 * @param pc program counter to reference for fallback
+		 * @return const opcode* (estimated) program start
+		 */
+		const opcode* calculate_program_start(const opcode* pc) {
+			return program_start ? program_start : pc - MIZU_MAXIMUM_LABEL_SEARCH;
+		}
+		/**
+		 * Calculates where the program ends (or a estimate based on the current program counter if null)
+		 * 
+		 * @param pc program counter to reference for fallback
+		 * @return const opcode* (estimated) program end
+		 */
+		const opcode* calculate_program_end(const opcode* pc) {
+			return program_end ? program_end : pc - MIZU_MAXIMUM_LABEL_SEARCH;
+		}
 	};
 	/**
 	 * Configures a new Mizu environment
 	 * @note sets register x0 to zero
-	 * 
+	 *
 	 * @param env the environment to configure
+	 * @param program_start pointer to the start of the program (defaults to null)
+	 * @param program_end pointer to the end of the program (defaults to null)
 	 */
-	inline void setup_environment(registers_and_stack& env) {
+	inline void setup_environment(registers_and_stack& env, const opcode* program_start = nullptr, const opcode* program_end = nullptr) {
 		env.memory[0] = 0;
 		env.stack_boundary = (uint8_t*)(env.memory.data() + 256);
 		env.stack_bottom = (uint8_t*)(env.memory.data() + env.memory.size());
+		env.program_start = program_start;
+		env.program_end = program_end;
+	}
+
+	/**
+	 * Configures a new Mizu environment
+	 * @note sets register x0 to zero
+	 *
+	 * @param env the environment to configure
+	 * @param program view representing the whole program
+	 */
+	inline void setup_environment(registers_and_stack& env, fp::view<const opcode> program) {
+		setup_environment(env, program.data(), program.data() + program.size());
 	}
 
 	/**
 	 * Copies the provided \p binary data into the bottom of an environment's stack.
-	 * 
+	 *
 	 * @param env The enviornment to copy data into
 	 * @param binary The binary data to fill the bottom of its stack with
 	 */
@@ -279,7 +322,7 @@ namespace mizu {
 			execution_context ctx{program_counter - 1, enviornment.memory, environment->stack_bottom, environment};
 			fpda_push_back(contexts, ctx);
 		}
-		
+
 		static void clear() {
 			if(contexts) fpda_free_and_null(contexts);
 			current_context = 0;
