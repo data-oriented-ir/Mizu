@@ -221,6 +221,10 @@ namespace mizu {
 			return program_end ? program_end : pc - MIZU_MAXIMUM_LABEL_SEARCH;
 		}
 	};
+
+/** \addtogroup setup_environment
+ *  @{
+ */
 	/**
 	 * Configures a new Mizu environment
 	 * @note sets register x0 to zero
@@ -259,6 +263,7 @@ namespace mizu {
 		auto env_end = (std::byte*)(env.memory.data() + env.memory.size());
 		memcpy(env_end - binary.size(), binary.data(), binary.size());
 	}
+/** @}*/
 
 #ifndef MIZU_NO_HARDWARE_THREADS
 	/**

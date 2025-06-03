@@ -1,5 +1,5 @@
 .cache
 .vscode
 build
-build-em
+build*
 gen
