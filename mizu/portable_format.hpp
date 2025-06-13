@@ -123,6 +123,6 @@ namespace mizu { inline namespace portable {
 			<< "\tMIZU_START_FROM_ENVIRONMENT(program, environment);\n"
 			<< "}\n";
 			
-		return out.release();
+		return fp::string{out.release()};
 	}
 }}

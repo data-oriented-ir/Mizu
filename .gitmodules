@@ -1,9 +1,9 @@
 [submodule "ffi/libffi"]
 	path = ffi/libffi
-	url = https://github.com/joshuadahlunr/libffi.git
+	url = https://github.com/data-oriented-ir/libffi.git
 [submodule "ffi/wasm/magic_enum"]
 	path = ffi/wasm/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
 [submodule "thirdparty/libfp"]
 	path = thirdparty/libfp
-	url = https://github.com/joshuadahlunr/libfp
+	url = https://github.com/data-oriented-ir/libfp.git
